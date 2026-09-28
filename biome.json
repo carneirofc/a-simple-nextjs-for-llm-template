@@ -46,14 +46,29 @@
         },
         "noForEach": "error",
         "noUselessStringConcat": "error",
-        "useSimplifiedLogicExpression": "error"
+        "useSimplifiedLogicExpression": "error",
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": {
+            "maxLines": 40,
+            "skipBlankLines": true
+          }
+        },
+        "useMaxParams": {
+          "level": "error",
+          "options": {
+            "max": 3
+          }
+        }
       },
       "correctness": {
         "noUnusedVariables": "error",
         "noUnusedImports": "error",
         "noUnusedFunctionParameters": "error",
         "useExhaustiveDependencies": "error",
-        "noUndeclaredDependencies": "error"
+        "noUndeclaredDependencies": "error",
+        "noNestedComponentDefinitions": "error",
+        "noReactPropAssignments": "error"
       },
       "performance": {
         "noBarrelFile": "error",
@@ -123,7 +138,8 @@
               "maxDuration"
             ]
           }
-        }
+        },
+        "useReactFunctionComponents": "error"
       },
       "suspicious": {
         "noExplicitAny": "error",
@@ -148,7 +164,15 @@
           "options": {}
         },
         "noFloatingPromises": "error",
-        "noMisusedPromises": "error"
+        "noMisusedPromises": "error",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 150,
+            "skipBlankLines": true
+          }
+        },
+        "noLeakedRender": "error"
       }
     }
   },
@@ -190,6 +214,25 @@
         "rules": {
           "style": {
             "useNamingConvention": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/*.test.tsx"],
+      "linter": {
+        "rules": {
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          },
+          "nursery": {
+            "noExcessiveLinesPerFile": {
+              "level": "error",
+              "options": {
+                "maxLines": 300,
+                "skipBlankLines": true
+              }
+            }
           }
         }
       }

@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added
+- Biome size/structure rules: file ≤ 150 lines (tests ≤ 300), function ≤ 40 lines, ≤ 3 params, no nested component definitions, no leaked renders.
+- Shared UI primitives in `src/components/ui` (`Button`, `TextInput`, `FieldErrors`, `DataTable`) with tests.
+- `src/components/AGENTS.md` and "Size & structure" rules in `AGENTS.md` for splitting code into modules.
+
+### Changed
+- `notes` example composes the shared UI primitives; table columns moved to `notes-columns.ts`.
+
 ## [0.1.0] - 2026-09-28
 
 ### Added

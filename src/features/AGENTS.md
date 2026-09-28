@@ -14,6 +14,9 @@ Each `src/features/<name>/` owns its UI, server actions and query options. Data 
 - `actions.ts` — `"use server"`; thin async wrappers over `data.ts` for client calls. Never invoke during render (Next throws) — server prefetch uses `data.ts`.
 - `queries.ts` — query keys + `queryOptions(...)` (client `queryFn` = server action). Server prefetch spreads it and overrides `queryFn` with the `data.ts` function.
 - `<name>-*.tsx` — client components; data via TanStack Query, forms via TanStack Form (`validators` = Zod schema), tables via TanStack Table v9.
+- `<name>-columns.ts` / `<name>-config.ts` — table column defs and static config, kept out of component files.
+- `use-<name>.ts` — custom hooks extracted from components when stateful logic grows.
+- Compose `src/components/ui` primitives (`Button`, `TextInput`, `FieldErrors`, `DataTable`); split a component into sibling `<name>-<part>.tsx` files before it nears the 40-line function limit.
 - Colocated tests `<file>.test.tsx` using Testing Library + `userEvent`; test components through props (mock actions/callbacks), not the DB.
 - No `index.ts` barrels; import files directly.
 
