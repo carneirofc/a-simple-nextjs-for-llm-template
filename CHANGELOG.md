@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-28
+
 ### Added
 - Biome size/structure rules: file ≤ 150 lines (tests ≤ 300), function ≤ 40 lines, ≤ 3 params, no nested component definitions, no leaked renders.
 - Shared UI primitives in `src/components/ui` (`Button`, `TextInput`, `FieldErrors`, `DataTable`) with tests.
