@@ -35,6 +35,18 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Tests:** every new module with logic gets a colocated `*.test.ts(x)`. Keep tests out of `src/server/db/schema/` (drizzle-kit loads every file there).
 - No barrel files (`index.ts` re-exports). kebab-case filenames. Named exports except Next.js special files and configs.
 
+### Size & structure (Biome-enforced)
+- File ≤ 150 lines (tests ≤ 300), function/component ≤ 40 lines (blank lines not counted), ≤ 3 params, cognitive complexity ≤ 10.
+- Hitting a limit means **split the module**, never `biome-ignore` a size or complexity rule.
+- One exported component per file; never define a component inside another component.
+- Where extracted code goes:
+  - generic presentational piece → `src/components/ui/<name>.tsx`; feature-specific piece → sibling `<feature>-<part>.tsx`
+  - stateful logic → `use-<name>.ts` hook next to its consumer
+  - pure logic → `src/lib/<name>.ts` (shared) or `<feature>-<name>.ts` (local), with tests
+  - column defs / static config → `<feature>-columns.ts` / `<feature>-config.ts`
+- Server Components by default; `"use client"` only on interactive leaves.
+- Build UI from `src/components/ui` primitives before writing raw styled elements.
+
 ### Git workflow (git-flow)
 - `master`: production; only merges from `release/*` / `hotfix/*`, tagged `vX.Y.Z`.
 - `develop`: integration; default base for work.
@@ -53,7 +65,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — Vitest
   - `pnpm check` — lint + typecheck + test + build
   - `pnpm db:generate` / `db:migrate` / `db:push` / `db:studio` — drizzle-kit (stop `pnpm dev` first when using PGlite; single-process DB)
-- Layout: `src/app` routes · `src/features/<name>` feature UI + server actions + query options · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
+- Layout: `src/app` routes · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
 
 ## Verification
 
@@ -63,4 +75,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 - `src/app/AGENTS.md` — routing, RSC/client boundaries, SSR prefetch + hydration pattern.
 - `src/server/AGENTS.md` — database client, schema/migrations, auth.
+- `src/components/AGENTS.md` — shared UI primitives contract.
 - `src/features/AGENTS.md` — feature module shape (actions, query options, components, tests).
