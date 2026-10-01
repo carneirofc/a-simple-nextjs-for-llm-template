@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added
+- Radix Primitives (`radix-ui`) as the base for shared UI components.
+- `Label` primitive (`src/components/ui/label.tsx`) built on Radix `Label`.
+- `Button` `asChild` prop (Radix `Slot`) to render links or other elements with button styles.
+
+### Changed
+- `TextInput` renders its label via the shared `Label` primitive.
+- `src/components/AGENTS.md` / `AGENTS.md`: "Radix first" contract for interactive UI primitives.
+
 ## [0.2.0] - 2026-09-28
 
 ### Added
