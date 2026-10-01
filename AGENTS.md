@@ -4,7 +4,7 @@
 
 Minimal Next.js 16 starter meant to be extended by LLM agents. Opinionated stack, strict lint, few files.
 
-Stack: Next.js 16 (App Router, `src/`, Turbopack, SSR) · React 19 · TypeScript (strict) · Tailwind CSS v4 · Biome v2 · TanStack Query / Form / Table · Zod v4 · Drizzle ORM (Postgres; PGlite in dev) · Better Auth (opt-in) · Vitest + Testing Library · pnpm.
+Stack: Next.js 16 (App Router, `src/`, Turbopack, SSR) · React 19 · TypeScript (strict) · Tailwind CSS v4 · Radix Primitives (`radix-ui`) · Biome v2 · TanStack Query / Form / Table · Zod v4 · Drizzle ORM (Postgres; PGlite in dev) · Better Auth (opt-in) · Vitest + Testing Library · pnpm.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -27,7 +27,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Types derive from Zod.** Data shapes are Zod schemas; types are `z.infer<typeof schema>`. DB shapes come from Drizzle tables via `drizzle-zod` (`createSelectSchema` / `createInsertSchema`). No hand-written `type`/`interface` that duplicates a data shape. Component prop types are fine.
 - **ORM only.** All DB access goes through Drizzle via `getDb()` in `src/server/**` or server actions. No raw SQL strings, no other DB clients. Schema changes = edit `src/server/db/schema/*` → `pnpm db:generate` → commit `drizzle/`.
 - **State:** server state ⇒ TanStack Query. If a client state library is needed ⇒ **Jotai only** (not installed yet; add `jotai` when first needed). No Redux/Zustand/Context-as-store.
-- **Forms ⇒ TanStack Form** (validators = Zod schemas). **Tables ⇒ TanStack Table v9** (`useTable` + `tableFeatures`, not v8 `useReactTable`). **Styles ⇒ Tailwind only.**
+- **Forms ⇒ TanStack Form** (validators = Zod schemas). **Tables ⇒ TanStack Table v9** (`useTable` + `tableFeatures`, not v8 `useReactTable`). **Styles ⇒ Tailwind only.** **Base UI primitives ⇒ Radix (`radix-ui`)**, wrapped in `src/components/ui` (see `src/components/AGENTS.md`).
 - **Env** only via `src/env.ts` (`noProcessEnv` enforced). Add every new variable there and to `.env.example`.
 - **Feature toggles:** new user-facing features ship behind a flag in `src/lib/flags.ts` (+ `FEATURE_*` in `src/env.ts`). Resolve flags on the server, pass values to client components as props. Remove flag + dead branch once stable.
 - **Auth is opt-in:** `FEATURE_AUTH=true` plus secrets. Code must work with `getAuth()` returning `null`.

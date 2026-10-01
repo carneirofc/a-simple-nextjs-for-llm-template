@@ -18,4 +18,17 @@ describe("Button", () => {
     render(<Button variant="ghost">Cancel</Button>);
     expect(screen.getByRole("button", { name: "Cancel" })).toHaveClass("border");
   });
+
+  it("renders its child with button styles when asChild is set", () => {
+    render(
+      <Button asChild={true} variant="ghost">
+        <a href="/notes">Notes</a>
+      </Button>,
+    );
+
+    const link = screen.getByRole("link", { name: "Notes" });
+    expect(link).toHaveClass("border");
+    expect(link).not.toHaveAttribute("type");
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
 });

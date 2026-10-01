@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import { Label } from "./label";
 
 type TextInputProps = Omit<ComponentProps<"input">, "id"> & {
   id: string;
@@ -15,9 +16,9 @@ export function TextInput({
 }: TextInputProps) {
   return (
     <>
-      <label className={hideLabel ? "sr-only" : "font-medium text-sm"} htmlFor={id}>
+      <Label className={hideLabel ? "sr-only" : ""} htmlFor={id}>
         {label}
-      </label>
+      </Label>
       <input
         className={`rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 ${className}`}
         id={id}
