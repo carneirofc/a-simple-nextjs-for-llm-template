@@ -64,6 +64,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `release/<x.y.z>`: from `develop`; bump version + finalize `CHANGELOG.md`; merge to `master` (tag) and back to `develop`.
 - `hotfix/<slug>`: from `master`; merge to `master` (tag) and `develop`.
 - Conventional Commits (`feat:`, `fix:`, `chore:`, `docs:`, `test:`, `refactor:`). No `Co-Authored-By` trailers.
+- Git hooks (`lefthook.yml`, installed by `pnpm install`): pre-commit Biome-fixes staged files + related tests, commit-msg runs commitlint, pre-push typecheck + tests. Never `--no-verify` to dodge a failure; fix it. CI enforces the same rules.
 - Every change adds an entry under `## [Unreleased]` in `CHANGELOG.md`.
 
 ## Work Guidance

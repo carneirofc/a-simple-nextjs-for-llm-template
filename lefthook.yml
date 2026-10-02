@@ -1,0 +1,30 @@
+# Git hooks (https://lefthook.dev). Installed by `pnpm install` via the `prepare` script.
+# Single native binary: runs the same on Windows, macOS, Linux. Skip once with `LEFTHOOK=0 git ...`
+# or `git commit --no-verify`; CI re-runs every check, so skipping never bypasses enforcement.
+# Personal overrides go in `lefthook-local.yml` (gitignored).
+
+pre-commit:
+  parallel: true
+  jobs:
+    - name: biome
+      glob: "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,jsonc,css}"
+      run: pnpm exec biome check --write --no-errors-on-unmatched --files-ignore-unknown=true {staged_files}
+      stage_fixed: true
+
+    - name: related-tests
+      glob: "src/**/*.{ts,tsx}"
+      run: pnpm exec vitest related --run --passWithNoTests {staged_files}
+
+commit-msg:
+  jobs:
+    - name: commitlint
+      run: pnpm exec commitlint --edit {1}
+
+pre-push:
+  parallel: true
+  jobs:
+    - name: typecheck
+      run: pnpm typecheck
+
+    - name: test
+      run: pnpm test

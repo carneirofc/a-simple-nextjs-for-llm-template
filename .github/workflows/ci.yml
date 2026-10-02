@@ -14,14 +14,23 @@ jobs:
     runs-on: ubuntu-latest
     env:
       NEXT_TELEMETRY_DISABLED: "1"
+      LEFTHOOK: "0" # no local git hooks in CI; this workflow runs the same checks
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history for commitlint
       - uses: pnpm/action-setup@v4
       - uses: actions/setup-node@v4
         with:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Conventional commit messages
+        if: github.event_name == 'pull_request' || github.event.before != '0000000000000000000000000000000000000000'
+        env:
+          FROM: ${{ github.event.pull_request.base.sha || github.event.before }}
+          TO: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: pnpm exec commitlint --from "$FROM" --to "$TO" --verbose
       - name: Lint, typecheck, test, build
         run: pnpm check
       - name: Migrations match schema

@@ -27,7 +27,19 @@ pnpm dev               # http://localhost:3000 — embedded PGlite DB, no setup
 - [AGENTS.md](AGENTS.md) (plus one per `src/` subtree) holds the rules; `CLAUDE.md` imports it.
 - `.claude/skills/` — reusable prompts: `/new-feature`, `/new-ui-primitive`, `/review-change`.
 - `.claude/settings.json` — pre-approved `pnpm` checks, a Biome hook that lints every edited file, and `pnpm install` on cloud session start.
-- CI runs `pnpm check` and a migration-drift check on every PR.
+- CI runs `pnpm check`, commitlint and a migration-drift check on every PR.
+
+## Git hooks
+
+[Lefthook](https://lefthook.dev) (a single native binary — same behaviour on Windows, macOS and Linux, no Bash or Husky shims) is installed by `pnpm install` through the `prepare` script. Config: [lefthook.yml](lefthook.yml).
+
+| Hook | Runs |
+| --- | --- |
+| `pre-commit` | `biome check --write` on staged files (fixes are re-staged) · `vitest related` for staged `src/` files |
+| `commit-msg` | commitlint — Conventional Commits, no `Co-Authored-By` ([commitlint.config.mjs](commitlint.config.mjs)) |
+| `pre-push` | `pnpm typecheck` · `pnpm test` |
+
+Skip in an emergency with `git commit --no-verify` or `LEFTHOOK=0`; CI repeats every check, so nothing unchecked lands. Re-install with `pnpm prepare`; personal overrides go in a gitignored `lefthook-local.yml`.
 
 ## Internationalisation
 
