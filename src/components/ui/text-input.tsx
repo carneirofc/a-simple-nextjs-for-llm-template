@@ -1,4 +1,6 @@
 import type { ComponentProps } from "react";
+import { cn } from "@/lib/cn";
+import { Label } from "./label";
 
 type TextInputProps = Omit<ComponentProps<"input">, "id"> & {
   id: string;
@@ -6,20 +8,17 @@ type TextInputProps = Omit<ComponentProps<"input">, "id"> & {
   hideLabel?: boolean;
 };
 
-export function TextInput({
-  id,
-  label,
-  hideLabel = false,
-  className = "",
-  ...rest
-}: TextInputProps) {
+export function TextInput({ id, label, hideLabel = false, className, ...rest }: TextInputProps) {
   return (
     <>
-      <label className={hideLabel ? "sr-only" : "font-medium text-sm"} htmlFor={id}>
+      <Label className={cn(hideLabel && "sr-only")} htmlFor={id}>
         {label}
-      </label>
+      </Label>
       <input
-        className={`rounded border border-zinc-300 px-3 py-2 dark:border-zinc-700 ${className}`}
+        className={cn(
+          "rounded border border-border bg-background px-3 py-2 outline-none focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive",
+          className,
+        )}
         id={id}
         {...rest}
       />

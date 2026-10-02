@@ -15,4 +15,22 @@ describe("FieldErrors", () => {
     render(<FieldErrors errors={[]} />);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("collapses duplicate messages", () => {
+    render(<FieldErrors errors={[{ message: "Required" }, { message: "Required" }, undefined]} />);
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
+
+  it("translates known messages and passes unknown ones through", () => {
+    render(
+      <FieldErrors
+        errors={[{ message: "required" }, { message: "Raw" }]}
+        messages={{ required: "Obrigatório" }}
+      />,
+    );
+    expect(screen.getAllByRole("alert").map((node) => node.textContent)).toEqual([
+      "Obrigatório",
+      "Raw",
+    ]);
+  });
 });

@@ -22,6 +22,17 @@ pnpm dev               # http://localhost:3000 — embedded PGlite DB, no setup
 | `pnpm check` | Everything above |
 | `pnpm db:generate` / `db:migrate` / `db:studio` | Drizzle Kit |
 
+## Working with AI agents
+
+- [AGENTS.md](AGENTS.md) (plus one per `src/` subtree) holds the rules; `CLAUDE.md` imports it.
+- `.claude/skills/` — reusable prompts: `/new-feature`, `/new-ui-primitive`, `/review-change`.
+- `.claude/settings.json` — pre-approved `pnpm` checks, a Biome hook that lints every edited file, and `pnpm install` on cloud session start.
+- CI runs `pnpm check` and a migration-drift check on every PR.
+
+## Internationalisation
+
+URLs are prefixed with a locale (`/en`, `/pt-BR`); `/` redirects using the `NEXT_LOCALE` cookie, then `Accept-Language`. Strings live in typed dictionaries under `src/i18n/dictionaries/` — a missing translation fails `pnpm typecheck`. See [src/i18n/AGENTS.md](src/i18n/AGENTS.md) to add a locale.
+
 ## Configuration
 
 See [.env.example](.env.example). Production needs `DATABASE_URL`. Auth is off unless `FEATURE_AUTH=true` with Better Auth + GitHub secrets.

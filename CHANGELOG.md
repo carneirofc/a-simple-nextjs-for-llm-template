@@ -5,6 +5,29 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 
 ## [Unreleased]
 
+### Added
+- Radix Primitives (`radix-ui`) as the base for shared UI components.
+- `Label` primitive (`src/components/ui/label.tsx`) built on Radix `Label`.
+- `Button` `asChild` prop (Radix `Slot`) to render links or other elements with button styles.
+- `cn()` class-merging helper (`clsx` + `tailwind-merge`) in `src/lib/cn.ts`.
+- Semantic design tokens (`primary`, `muted-foreground`, `border`, `destructive`, `ring`) in `globals.css`, light + dark.
+- Root `error.tsx` (Next 16 `retry`) and `not-found.tsx`.
+- Claude Code project setup: `.claude/settings.json` (permissions, Biome PostToolUse hook, cloud SessionStart install) and skills `/new-feature`, `/new-ui-primitive`, `/review-change`.
+- GitHub Actions CI (`pnpm check` + migration drift check), PR template, `.editorconfig`, `.nvmrc`.
+- `AGENTS.md`: UI & styling, security and agent-loop guidance plus a definition of done.
+- Internationalisation (English + Brazilian Portuguese (`pt-BR`)) on Next 16 primitives, no new dependencies: locale-prefixed routes under `src/app/[lang]/`, `src/proxy.ts` redirects via `NEXT_LOCALE` cookie → `Accept-Language`, type-checked dictionaries, `next/root-params` `getDictionary()`, `LocaleSwitcher`, `interpolate()` and `formatDateTime()` helpers, localized 404/error pages and metadata. Rules in `src/i18n/AGENTS.md`.
+
+### Changed
+- `TextInput` renders its label via the shared `Label` primitive.
+- `src/components/AGENTS.md` / `AGENTS.md`: "Radix first" contract for interactive UI primitives.
+- UI primitives merge `className` via `cn()` (callers can override base classes), use design tokens, and show `focus-visible` rings.
+- `FieldErrors` de-duplicates messages (fixes duplicate React keys) and translates them via an optional `messages` map; notes title input sets `aria-invalid`.
+- Zod validation messages are dictionary keys (`ValidationKey`) instead of English text.
+- Notes UI takes its strings as `labels` props; `notesColumns` became `createNotesColumns(labels, locale)`; dates are locale-formatted (UTC) instead of ISO strings.
+
+### Fixed
+- Home page uses `fetchQuery` for SSR so a failed DB read reaches `error.tsx` with its real cause, instead of a misleading "Server Functions cannot be called during initial render" 500.
+
 ## [0.2.0] - 2026-09-28
 
 ### Added
