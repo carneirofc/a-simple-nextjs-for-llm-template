@@ -31,7 +31,7 @@ pnpm dev               # http://localhost:3000 — embedded PGlite DB, no setup
 
 ## Internationalisation
 
-URLs are prefixed with a locale (`/en`, `/pt`); `/` redirects using the `NEXT_LOCALE` cookie, then `Accept-Language`. Strings live in typed dictionaries under `src/i18n/dictionaries/` — a missing translation fails `pnpm typecheck`. See [src/i18n/AGENTS.md](src/i18n/AGENTS.md) to add a locale.
+URLs are prefixed with a locale (`/en`, `/pt-BR`); `/` redirects using the `NEXT_LOCALE` cookie, then `Accept-Language`. Strings live in typed dictionaries under `src/i18n/dictionaries/` — a missing translation fails `pnpm typecheck`. See [src/i18n/AGENTS.md](src/i18n/AGENTS.md) to add a locale.
 
 ## Configuration
 

@@ -1,8 +1,8 @@
 import type { Locale } from "./config";
 import { type Dictionary, en } from "./dictionaries/en";
-import { pt } from "./dictionaries/pt";
+import { ptBr } from "./dictionaries/pt-br";
 
-const dictionaries: Record<Locale, Dictionary> = { en, pt };
+const dictionaries: Record<Locale, Dictionary> = { en, "pt-BR": ptBr };
 
 /**
  * Synchronous lookup. Server Components should prefer `getDictionary()` from `./server`; this is for

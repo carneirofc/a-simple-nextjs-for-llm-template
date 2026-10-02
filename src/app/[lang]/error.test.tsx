@@ -24,7 +24,7 @@ describe("ErrorPage", () => {
   });
 
   it("uses the locale from the URL", () => {
-    params.lang = "pt";
+    params.lang = "pt-BR";
     renderError();
     expect(screen.getByRole("button", { name: "Tentar novamente" })).toBeInTheDocument();
   });

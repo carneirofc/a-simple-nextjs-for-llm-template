@@ -10,6 +10,6 @@ describe("formatDateTime", () => {
   });
 
   it("formats in Portuguese with a 24-hour clock", () => {
-    expect(formatDateTime(DATE, "pt")).toMatch(/^2 de jan\. de 2026.*15:04 UTC$/);
+    expect(formatDateTime(DATE, "pt-BR")).toMatch(/^2 de jan\. de 2026.*15:04 UTC$/);
   });
 });

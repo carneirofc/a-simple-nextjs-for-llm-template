@@ -11,7 +11,7 @@ describe("proxy", () => {
   it("redirects unprefixed paths using Accept-Language", () => {
     const response = proxy(request("/notes?x=1", { "accept-language": "pt-BR,pt;q=0.9" }));
     expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe("http://localhost:3000/pt/notes?x=1");
+    expect(response.headers.get("location")).toBe("http://localhost:3000/pt-BR/notes?x=1");
   });
 
   it("prefers the locale cookie over Accept-Language", () => {
@@ -20,9 +20,9 @@ describe("proxy", () => {
   });
 
   it("passes prefixed paths through and remembers the locale", () => {
-    const response = proxy(request("/pt/notes"));
+    const response = proxy(request("/pt-BR/notes"));
     expect(response.headers.get("location")).toBeNull();
-    expect(response.cookies.get("NEXT_LOCALE")?.value).toBe("pt");
+    expect(response.cookies.get("NEXT_LOCALE")?.value).toBe("pt-BR");
   });
 
   it("does not rewrite an unchanged cookie", () => {

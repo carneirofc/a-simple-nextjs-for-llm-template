@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { en } from "@/i18n/dictionaries/en";
-import { pt } from "@/i18n/dictionaries/pt";
+import { ptBr } from "@/i18n/dictionaries/pt-br";
 import type { Note } from "@/server/db/schema/notes";
 import { NotesTable } from "./notes-table";
 
@@ -25,7 +25,7 @@ describe("NotesTable", () => {
   });
 
   it("translates headers and dates", () => {
-    render(<NotesTable labels={pt.notes.table} locale="pt" notes={[NOTE]} />);
+    render(<NotesTable labels={ptBr.notes.table} locale="pt-BR" notes={[NOTE]} />);
     expect(screen.getByRole("columnheader", { name: "Criada em" })).toBeInTheDocument();
     expect(
       screen.getByRole("cell", { name: /^1 de jan\. de 2026.*13:00 UTC$/ }),

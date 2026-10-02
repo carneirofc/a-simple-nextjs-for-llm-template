@@ -1,4 +1,4 @@
-import { defaultLocale, hasLocale, type Locale } from "./config";
+import { defaultLocale, type Locale, locales } from "./config";
 
 type Preference = { tag: string; quality: number };
 
@@ -14,12 +14,17 @@ function parseAcceptLanguage(header: string): Preference[] {
     .sort((a, b) => b.quality - a.quality);
 }
 
+const baseLanguage = (tag: string) => tag.toLowerCase().split("-")[0];
+
+/** Exact tag (case-insensitive), else the first supported locale sharing the base language. */
 function matchTag(tag: string): Locale | undefined {
-  const base = tag.split("-")[0];
-  return [tag, base].find(hasLocale);
+  return (
+    locales.find((locale) => locale.toLowerCase() === tag) ??
+    locales.find((locale) => baseLanguage(locale) === baseLanguage(tag))
+  );
 }
 
-/** Picks the best supported locale for an `Accept-Language` header (exact tag, then base language). */
+/** Picks the best supported locale for an `Accept-Language` header. */
 export function negotiateLocale(header: string | null): Locale {
   for (const { tag } of parseAcceptLanguage(header ?? "")) {
     const match = matchTag(tag);

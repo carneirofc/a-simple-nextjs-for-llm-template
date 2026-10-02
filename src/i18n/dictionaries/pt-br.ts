@@ -1,6 +1,6 @@
 import type { Dictionary } from "./en";
 
-export const pt: Dictionary = {
+export const ptBr: Dictionary = {
   metadata: {
     title: "Modelo Next.js para LLM",
     description: "Modelo mínimo de Next.js",

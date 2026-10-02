@@ -10,8 +10,8 @@ describe("LocaleSwitcher", () => {
 
     expect(screen.getByRole("navigation", { name: "Language" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "English" })).toHaveAttribute("aria-current", "true");
-    const pt = screen.getByRole("link", { name: "Português" });
-    expect(pt).toHaveAttribute("href", "/pt/notes");
+    const pt = screen.getByRole("link", { name: "Português (Brasil)" });
+    expect(pt).toHaveAttribute("href", "/pt-BR/notes");
     expect(pt).not.toHaveAttribute("aria-current");
   });
 });

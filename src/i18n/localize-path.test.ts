@@ -3,7 +3,7 @@ import { getPathLocale, localizePath } from "./localize-path";
 
 describe("getPathLocale", () => {
   it("reads a supported locale prefix", () => {
-    expect(getPathLocale("/pt")).toBe("pt");
+    expect(getPathLocale("/pt-BR")).toBe("pt-BR");
     expect(getPathLocale("/en/notes")).toBe("en");
   });
 
@@ -16,12 +16,12 @@ describe("getPathLocale", () => {
 
 describe("localizePath", () => {
   it("adds a prefix to unprefixed paths", () => {
-    expect(localizePath("/", "pt")).toBe("/pt");
+    expect(localizePath("/", "pt-BR")).toBe("/pt-BR");
     expect(localizePath("/notes/1", "en")).toBe("/en/notes/1");
   });
 
   it("replaces an existing prefix", () => {
-    expect(localizePath("/en", "pt")).toBe("/pt");
-    expect(localizePath("/en/notes", "pt")).toBe("/pt/notes");
+    expect(localizePath("/en", "pt-BR")).toBe("/pt-BR");
+    expect(localizePath("/en/notes", "pt-BR")).toBe("/pt-BR/notes");
   });
 });

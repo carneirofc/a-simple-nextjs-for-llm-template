@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import { en } from "@/i18n/dictionaries/en";
-import { pt } from "@/i18n/dictionaries/pt";
+import { ptBr } from "@/i18n/dictionaries/pt-br";
 import { NotesForm } from "./notes-form";
 
 describe("NotesForm", () => {
@@ -30,7 +30,7 @@ describe("NotesForm", () => {
   });
 
   it("renders labels and validation errors in the given language", async () => {
-    render(<NotesForm labels={pt.notes.form} onSubmit={vi.fn()} validation={pt.validation} />);
+    render(<NotesForm labels={ptBr.notes.form} onSubmit={vi.fn()} validation={ptBr.validation} />);
 
     await userEvent.click(screen.getByRole("button", { name: "Adicionar" }));
 

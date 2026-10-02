@@ -1,6 +1,6 @@
 import { hasLocale, type Locale } from "./config";
 
-/** The locale prefix of a pathname (`/pt/notes` → `"pt"`), if any. */
+/** The locale prefix of a pathname (`/pt-BR/notes` → `"pt-BR"`), if any. */
 export function getPathLocale(pathname: string): Locale | undefined {
   const segment = pathname.split("/")[1];
   return hasLocale(segment) ? segment : undefined;
