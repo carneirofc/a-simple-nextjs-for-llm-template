@@ -16,7 +16,9 @@ export default async function HomePage() {
 
   const queryClient = getQueryClient();
   // Same query key as the client, but read the DB directly (server actions can't run during render).
-  await queryClient.prefetchQuery({ ...notesQueryOptions, queryFn: getNotes });
+  // `fetchQuery` (not `prefetchQuery`) so a failure reaches `error.tsx` instead of being swallowed
+  // and resurfacing as a misleading "Server Functions cannot be called during initial render".
+  await queryClient.fetchQuery({ ...notesQueryOptions, queryFn: getNotes });
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-8">
