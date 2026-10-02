@@ -4,7 +4,7 @@
 
 Minimal Next.js 16 starter meant to be extended by LLM agents. Opinionated stack, strict lint, few files.
 
-Stack: Next.js 16 (App Router, `src/`, Turbopack, SSR) · React 19 · TypeScript (strict) · Tailwind CSS v4 · Radix Primitives (`radix-ui`) · Biome v2 · TanStack Query / Form / Table · Zod v4 · Drizzle ORM (Postgres; PGlite in dev) · Better Auth (opt-in) · Vitest + Testing Library · pnpm.
+Stack: Next.js 16 (App Router, `src/`, Turbopack, SSR) · React 19 · TypeScript (strict) · Tailwind CSS v4 · Radix Primitives (`radix-ui`) · Biome v2 · TanStack Query / Form / Table · Zod v4 · Drizzle ORM (Postgres; PGlite in dev) · Better Auth (opt-in) · i18n via Next `[lang]` routing + typed dictionaries · Vitest + Testing Library · pnpm.
 
 <!-- BEGIN:nextjs-agent-rules -->
 
@@ -30,6 +30,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - **Forms ⇒ TanStack Form** (validators = Zod schemas). **Tables ⇒ TanStack Table v9** (`useTable` + `tableFeatures`, not v8 `useReactTable`). **Styles ⇒ Tailwind only.** **Base UI primitives ⇒ Radix (`radix-ui`)**, wrapped in `src/components/ui` (see `src/components/AGENTS.md`).
 - **Env** only via `src/env.ts` (`noProcessEnv` enforced). Add every new variable there and to `.env.example`.
 - **Feature toggles:** new user-facing features ship behind a flag in `src/lib/flags.ts` (+ `FEATURE_*` in `src/env.ts`). Resolve flags on the server, pass values to client components as props. Remove flag + dead branch once stable.
+- **i18n:** no hard-coded user-visible strings; every string is a dictionary key in `src/i18n/dictionaries/*` (all locales in the same change). Routes live under `src/app/[lang]/`. See `src/i18n/AGENTS.md`. (i18n is routing infrastructure, so it is not behind a feature flag.)
 - **Auth is opt-in:** `FEATURE_AUTH=true` plus secrets. Code must work with `getAuth()` returning `null`.
 - **Lint is law:** `pnpm lint` must pass. `biome-ignore` only with a written reason. Do not weaken `biome.json` rules to make code pass.
 - **Tests:** every new module with logic gets a colocated `*.test.ts(x)`. Keep tests out of `src/server/db/schema/` (drizzle-kit loads every file there).
@@ -83,7 +84,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
   - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — Vitest
   - `pnpm check` — lint + typecheck + test + build
   - `pnpm db:generate` / `db:migrate` / `db:push` / `db:studio` — drizzle-kit (stop `pnpm dev` first when using PGlite; single-process DB)
-- Layout: `src/app` routes · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
+- Layout: `src/app/[lang]` localized routes · `src/proxy.ts` locale redirects · `src/i18n` locales + dictionaries · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
 
 ## Verification
 
@@ -93,6 +94,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ### Definition of done
 - [ ] `pnpm check` green; no new `biome-ignore` without a reason
 - [ ] Tests cover new logic and the user-visible behaviour
+- [ ] New UI strings exist in every dictionary; no hard-coded copy
 - [ ] Feature flag, env vars (`src/env.ts` + `.env.example`) and migration added where applicable
 - [ ] `CHANGELOG.md` `[Unreleased]` entry; Conventional Commit message
 
@@ -102,3 +104,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `src/server/AGENTS.md` — database client, schema/migrations, auth.
 - `src/components/AGENTS.md` — shared UI primitives contract.
 - `src/features/AGENTS.md` — feature module shape (actions, query options, components, tests).
+- `src/i18n/AGENTS.md` — locales, dictionaries, translation and formatting rules.

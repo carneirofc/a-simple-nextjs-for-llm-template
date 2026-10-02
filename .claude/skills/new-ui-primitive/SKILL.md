@@ -17,6 +17,7 @@ Read `src/components/AGENTS.md` and two existing wrappers (`button.tsx`, `label.
 - Compound Radix parts: one file per styled part (`dialog.tsx`, `dialog-content.tsx`, …).
 - Styling: Tailwind with semantic tokens from `src/app/globals.css` (`bg-background`, `text-muted-foreground`, `border-border`, `ring-ring`, `bg-primary`, `text-destructive`). Missing a token? Add it there for light **and** dark. Always add `focus-visible:` ring styles to focusable elements.
 - Variants: a `const VARIANT_CLASSES = {...} as const` map keyed by a `variant` prop (see `Button`). Add a variant only when two call sites need it.
+- No hard-coded copy: user-visible text (including `aria-label`s) comes in via props.
 - No `"use client"` unless this file itself calls hooks.
 
 ## Test

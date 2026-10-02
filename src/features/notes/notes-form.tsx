@@ -4,15 +4,18 @@ import { useForm } from "@tanstack/react-form";
 import { Button } from "@/components/ui/button";
 import { FieldErrors } from "@/components/ui/field-errors";
 import { TextInput } from "@/components/ui/text-input";
+import type { Dictionary } from "@/i18n/dictionaries/en";
 import { type NewNote, noteInsertSchema } from "@/server/db/schema/notes";
 
 type NotesFormProps = {
   onSubmit: (value: NewNote) => Promise<unknown>;
+  labels: Dictionary["notes"]["form"];
+  validation: Dictionary["validation"];
 };
 
 const DEFAULT_VALUES: NewNote = { title: "" };
 
-export function NotesForm({ onSubmit }: NotesFormProps) {
+export function NotesForm({ onSubmit, labels, validation }: NotesFormProps) {
   const form = useForm({
     defaultValues: DEFAULT_VALUES,
     validators: { onSubmit: noteInsertSchema },
@@ -37,21 +40,21 @@ export function NotesForm({ onSubmit }: NotesFormProps) {
               aria-invalid={field.state.meta.errors.length > 0}
               hideLabel={true}
               id={field.name}
-              label="Title"
+              label={labels.title}
               name={field.name}
               onBlur={field.handleBlur}
               onChange={(event) => field.handleChange(event.target.value)}
-              placeholder="New note"
+              placeholder={labels.placeholder}
               value={field.state.value}
             />
-            <FieldErrors errors={field.state.meta.errors} />
+            <FieldErrors errors={field.state.meta.errors} messages={validation} />
           </div>
         )}
       </form.Field>
       <form.Subscribe selector={(state) => state.isSubmitting}>
         {(isSubmitting) => (
           <Button disabled={isSubmitting} type="submit">
-            Add
+            {labels.add}
           </Button>
         )}
       </form.Subscribe>

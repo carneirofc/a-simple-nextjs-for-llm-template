@@ -7,7 +7,8 @@ describe("noteInsertSchema", () => {
   });
 
   it("rejects blank titles", () => {
-    expect(noteInsertSchema.safeParse({ title: "   " }).success).toBe(false);
+    const result = noteInsertSchema.safeParse({ title: "   " });
+    expect(result.error?.issues[0]?.message).toBe("required");
   });
 
   it("rejects titles over the max length", () => {

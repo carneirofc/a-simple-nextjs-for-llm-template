@@ -13,7 +13,7 @@ Shared, feature-agnostic presentational UI primitives (`ui/`), styled with Tailw
 ## Local Contracts
 
 - One component per file, named export, kebab-case filename, colocated `<file>.test.tsx`.
-- Props-driven only: no data fetching, no server actions, no `@/server/**` imports, no feature flags.
+- Props-driven only: user-visible text arrives via props (callers pass dictionary strings); no hard-coded copy, no data fetching, no server actions, no `@/server/**` imports, no feature flags.
 - Extend native elements via `ComponentProps<"el">` and spread the rest props; merge `className` last with `cn()` so callers can override.
 - Semantic tokens only (`bg-primary`, `border-border`, `text-muted-foreground`, `ring-ring`, `text-destructive`); focusable elements get `focus-visible:ring-2 focus-visible:ring-ring`.
 - **Radix first:** any interactive/accessible primitive (dialog, dropdown, popover, tooltip, tabs, checkbox, switch, select, label, …) wraps the matching Radix primitive — never hand-roll focus traps, keyboard nav or ARIA wiring.

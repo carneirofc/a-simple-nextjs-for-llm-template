@@ -25,6 +25,7 @@ description: Review the current diff (or a named branch/PR) against this repo's 
 
 **UI**
 - Built from `src/components/ui`; interactive primitives wrap Radix.
+- No hard-coded user-visible strings; every new key exists in all `src/i18n/dictionaries/*`; dates/numbers formatted with an explicit locale.
 - Semantic color tokens only, `cn()` for class merging, visible `focus-visible` styles, labelled inputs.
 
 **Hygiene**
