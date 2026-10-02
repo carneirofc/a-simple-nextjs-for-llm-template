@@ -47,6 +47,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Server Components by default; `"use client"` only on interactive leaves.
 - Build UI from `src/components/ui` primitives before writing raw styled elements.
 
+### UI & styling
+- Colors come from semantic tokens in `src/app/globals.css` (`bg-primary`, `text-muted-foreground`, `border-border`, `ring-ring`, `text-destructive`, …). No raw palette classes (`zinc-300`, `red-600`); add a token (light + dark) instead.
+- Merge classes with `cn()` from `src/lib/cn.ts` (clsx + tailwind-merge), never string templates, so a caller's `className` overrides defaults.
+- Every focusable element has a visible `focus-visible:` style; every input has a label; invalid fields set `aria-invalid`.
+
+### Security
+- Server actions (`"use server"`) are public HTTP endpoints. Validate every argument with Zod and authorize the caller inside `data.ts`; never trust ids, roles or flags sent by the client.
+- Never log or return secrets; error UI shows `error.digest`, not server messages.
+
 ### Git workflow (git-flow)
 - `master`: production; only merges from `release/*` / `hotfix/*`, tagged `vX.Y.Z`.
 - `develop`: integration; default base for work.
@@ -57,6 +66,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Every change adds an entry under `## [Unreleased]` in `CHANGELOG.md`.
 
 ## Work Guidance
+
+- Agent loop for any change:
+  1. Read this file and the child `AGENTS.md` of every directory you will touch; read `node_modules/next/dist/docs/` for any Next API you are not certain of.
+  2. Find the closest existing example (`src/features/notes/`, `src/components/ui/button.tsx`) and copy its shape.
+  3. Make the smallest change that satisfies the request; write or update its test alongside it.
+  4. Run `pnpm check`; fix root causes, don't suppress rules.
+  5. Add the `CHANGELOG.md` entry; update an `AGENTS.md` only when a convention changed.
+- Claude Code skills in `.claude/skills/` (also invocable as `/new-feature`, `/new-ui-primitive`, `/review-change`) encode these workflows; other agents can read them as plain Markdown checklists.
+- `.claude/settings.json` runs Biome on every edited file (`.claude/hooks/biome-check.mjs`) and reports remaining violations immediately.
 
 - Commands (pnpm via `corepack pnpm` if not installed globally):
   - `pnpm dev` — dev server (PGlite at `./.data/pglite`, auto-migrated)
@@ -70,6 +88,13 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Verification
 
 - `pnpm check` (lint, typecheck, unit tests, production build) must pass before commit.
+- CI (`.github/workflows/ci.yml`) runs `pnpm check` and fails if `pnpm db:generate` would produce a new migration.
+
+### Definition of done
+- [ ] `pnpm check` green; no new `biome-ignore` without a reason
+- [ ] Tests cover new logic and the user-visible behaviour
+- [ ] Feature flag, env vars (`src/env.ts` + `.env.example`) and migration added where applicable
+- [ ] `CHANGELOG.md` `[Unreleased]` entry; Conventional Commit message
 
 ## Child Index
 
