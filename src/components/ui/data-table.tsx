@@ -12,7 +12,7 @@ export function DataTable<TFeatures extends TableFeatures, TData extends RowData
   const rows = table.getRowModel().rows;
 
   if (rows.length === 0) {
-    return <p className="text-zinc-500">{emptyMessage}</p>;
+    return <p className="text-muted-foreground">{emptyMessage}</p>;
   }
 
   return (
@@ -21,7 +21,7 @@ export function DataTable<TFeatures extends TableFeatures, TData extends RowData
         {table.getHeaderGroups().map((group) => (
           <tr key={group.id}>
             {group.headers.map((header) => (
-              <th className="border-b py-2" key={header.id}>
+              <th className="border-border border-b py-2" key={header.id}>
                 {header.isPlaceholder ? null : <table.FlexRender header={header} />}
               </th>
             ))}
@@ -32,7 +32,7 @@ export function DataTable<TFeatures extends TableFeatures, TData extends RowData
         {rows.map((row) => (
           <tr key={row.id}>
             {row.getAllCells().map((cell) => (
-              <td className="border-b py-2" key={cell.id}>
+              <td className="border-border border-b py-2" key={cell.id}>
                 <table.FlexRender cell={cell} />
               </td>
             ))}

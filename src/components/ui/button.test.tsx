@@ -31,4 +31,11 @@ describe("Button", () => {
     expect(link).not.toHaveAttribute("type");
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("lets a custom className override base classes", () => {
+    render(<Button className="px-2">Tight</Button>);
+    const button = screen.getByRole("button", { name: "Tight" });
+    expect(button).toHaveClass("px-2");
+    expect(button).not.toHaveClass("px-4");
+  });
 });

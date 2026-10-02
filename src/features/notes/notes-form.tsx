@@ -34,6 +34,7 @@ export function NotesForm({ onSubmit }: NotesFormProps) {
         {(field) => (
           <div className="flex flex-1 flex-col gap-1">
             <TextInput
+              aria-invalid={field.state.meta.errors.length > 0}
               hideLabel={true}
               id={field.name}
               label="Title"

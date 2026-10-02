@@ -3,9 +3,10 @@ type FieldErrorsProps = {
 };
 
 export function FieldErrors({ errors }: FieldErrorsProps) {
-  return errors.map((error) => (
-    <p className="text-red-600 text-sm" key={error?.message} role="alert">
-      {error?.message}
+  const messages = [...new Set(errors.map((error) => error?.message).filter(Boolean))];
+  return messages.map((message) => (
+    <p className="text-destructive text-sm" key={message} role="alert">
+      {message}
     </p>
   ));
 }

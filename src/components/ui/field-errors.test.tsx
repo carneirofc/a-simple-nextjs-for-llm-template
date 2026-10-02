@@ -15,4 +15,9 @@ describe("FieldErrors", () => {
     render(<FieldErrors errors={[]} />);
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
+
+  it("collapses duplicate messages", () => {
+    render(<FieldErrors errors={[{ message: "Required" }, { message: "Required" }, undefined]} />);
+    expect(screen.getAllByRole("alert")).toHaveLength(1);
+  });
 });
