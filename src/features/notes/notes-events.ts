@@ -2,23 +2,15 @@ import * as z from "zod";
 import { defineRealtimeEvents } from "@/lib/realtime";
 import { notesCache } from "./notes-cache";
 
-// Notes events: the payloads stored in the outbox, handled by `notes-event-handlers.ts`, and
-// pushed to browsers over SSE. Thin by design (IDs only): consumers re-read through the API.
+// Notes events, published by `data.ts` and pushed to browsers over SSE. Thin by design (IDs only):
+// clients refetch through the normal API instead of trusting pushed data.
 
 export const noteCreatedEventSchema = z.object({
   type: z.literal("note.created"),
   noteId: z.uuid(),
 });
 
-export const noteProcessedEventSchema = z.object({
-  type: z.literal("note.processed"),
-  noteId: z.uuid(),
-});
-
-export const noteEventSchema = z.discriminatedUnion("type", [
-  noteCreatedEventSchema,
-  noteProcessedEventSchema,
-]);
+export const noteEventSchema = z.discriminatedUnion("type", [noteCreatedEventSchema]);
 
 export type NoteEvent = z.infer<typeof noteEventSchema>;
 

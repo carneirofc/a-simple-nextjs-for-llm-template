@@ -10,7 +10,6 @@ describe("fetchNotes", () => {
             id: "4f6c1c56-7f0a-4bd4-9c39-2f5b3b0c1e11",
             title: "Buy milk",
             createdAt: "2026-01-02T03:04:05.000Z",
-            processedAt: null,
           },
         ],
       }),

@@ -46,10 +46,6 @@ Skip in an emergency with `git commit --no-verify` or `LEFTHOOK=0`; CI repeats e
 
 URLs are prefixed with a locale (`/en`, `/pt-BR`); `/` redirects using the `NEXT_LOCALE` cookie, then `Accept-Language`. Strings live in typed dictionaries under `src/i18n/dictionaries/` — a missing translation fails `pnpm typecheck`. See [src/i18n/AGENTS.md](src/i18n/AGENTS.md) to add a locale.
 
-## Async processing and realtime
-
-Writes enqueue domain events in an outbox table in the same transaction, and users/clients can enqueue jobs directly (tracked by id with progress and result via `/api/v1/jobs/:id` and `useJob`); a poller started by `src/instrumentation.ts` processes them (retries, dead letter) and streams public events to the browser over SSE (`/api/v1/events`), where TanStack Query refetches what changed. Serverless: set `JOBS_RUNNER=external` and call `POST /api/internal/jobs` from a scheduler. Details: [docs/architecture/events.md](docs/architecture/events.md).
-
 ## Configuration
 
 See [.env.example](.env.example). Production needs `DATABASE_URL`. Auth is off unless `FEATURE_AUTH=true` with Better Auth + GitHub secrets.

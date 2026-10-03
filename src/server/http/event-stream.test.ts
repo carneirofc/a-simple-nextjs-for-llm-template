@@ -50,4 +50,30 @@ describe("eventStreamResponse", () => {
     controller.abort();
     vi.useRealTimers();
   });
+
+  it("does not subscribe when the client is already gone", async () => {
+    const controller = new AbortController();
+    controller.abort();
+    const subscribe = vi.fn();
+
+    const response = eventStreamResponse({ signal: controller.signal, subscribe });
+
+    const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+    expect(await reader.read()).toEqual({ done: true, value: undefined });
+    expect(subscribe).not.toHaveBeenCalled();
+  });
+
+  it("unsubscribes once when the stream is cancelled before the abort", async () => {
+    const controller = new AbortController();
+    const unsubscribe = vi.fn();
+    const response = eventStreamResponse({
+      signal: controller.signal,
+      subscribe: () => unsubscribe,
+    });
+
+    await (response.body as ReadableStream<Uint8Array>).cancel();
+    controller.abort();
+
+    expect(unsubscribe).toHaveBeenCalledOnce();
+  });
 });

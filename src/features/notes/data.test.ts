@@ -1,7 +1,6 @@
 // @vitest-environment node
 import { describe, expect, it, vi } from "vitest";
-import { createFakeOutbox } from "@/server/events/fake-outbox";
-import { createFakeUnitOfWork } from "@/server/fake-unit-of-work";
+import { createInMemoryEventBroker } from "@/server/events/event-broker";
 import { createFakeNotesRepository } from "@/server/notes/fake-notes-repository";
 import { createNotesService } from "./data";
 
@@ -9,11 +8,10 @@ import { createNotesService } from "./data";
 
 function setup() {
   const notesRepo = createFakeNotesRepository();
-  const outbox = createFakeOutbox();
-  const transaction = createFakeUnitOfWork({ notesRepo, outbox });
-  const queue = createFakeOutbox();
-  const service = createNotesService({ notesRepo, transaction, queue });
-  return { notesRepo, outbox, queue, service };
+  const eventBroker = createInMemoryEventBroker();
+  const published = vi.fn();
+  eventBroker.subscribe(published);
+  return { notesRepo, published, service: createNotesService({ notesRepo, eventBroker }) };
 }
 
 describe("notes service", () => {
@@ -26,19 +24,19 @@ describe("notes service", () => {
     expect(await service.list()).toEqual([expect.objectContaining({ title: "Buy milk" })]);
   });
 
-  it("enqueues note.created with the new note id", async () => {
-    const { service, outbox } = setup();
+  it("publishes note.created after the write", async () => {
+    const { service, published } = setup();
 
     const result = await service.create({ title: "Buy milk" });
 
     const noteId = result.ok ? result.data.id : "";
-    expect(outbox.rows()).toEqual([
-      expect.objectContaining({ type: "note.created", payload: { type: "note.created", noteId } }),
-    ]);
+    expect(published).toHaveBeenCalledWith(
+      expect.objectContaining({ event: { type: "note.created", noteId } }),
+    );
   });
 
-  it("returns a validation failure without writing anything", async () => {
-    const { service, notesRepo, outbox } = setup();
+  it("returns a validation failure without writing or publishing", async () => {
+    const { service, notesRepo, published } = setup();
     const insert = vi.spyOn(notesRepo, "insert");
 
     const result = await service.create({ title: "   " });
@@ -48,7 +46,7 @@ describe("notes service", () => {
       error: { code: "validation", fields: { title: ["required"] } },
     });
     expect(insert).not.toHaveBeenCalled();
-    expect(outbox.rows()).toEqual([]);
+    expect(published).not.toHaveBeenCalled();
   });
 
   it("rejects input that is not an object", async () => {
@@ -58,18 +56,5 @@ describe("notes service", () => {
       ok: false,
       error: { code: "validation" },
     });
-  });
-
-  it("enqueues a report job without writing any note", async () => {
-    const { service, queue, notesRepo } = setup();
-
-    const result = await service.requestReport();
-
-    const jobId = result.ok ? result.data.jobId : "";
-    expect(await queue.get(jobId)).toMatchObject({
-      type: "notes.report-requested",
-      status: "pending",
-    });
-    expect(await notesRepo.list()).toEqual([]);
   });
 });

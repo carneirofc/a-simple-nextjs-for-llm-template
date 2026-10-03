@@ -10,7 +10,3 @@ import { getNotesService } from "./data";
 export async function createNote(input: unknown): Promise<ActionResult<Note>> {
   return (await getNotesService()).create(input);
 }
-
-export async function requestNotesReport(): Promise<ActionResult<{ jobId: string }>> {
-  return (await getNotesService()).requestReport();
-}

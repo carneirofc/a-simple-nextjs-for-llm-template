@@ -8,7 +8,7 @@ import { noteInputSchema } from "./notes-schema";
 // Use cases. Every transport (Server Components, actions, `/api/v1` route handlers) calls these, so
 // feature-flag checks, validation and (when needed) authorization live here once.
 
-export type NotesDeps = Pick<Container, "notesRepo" | "transaction" | "queue">;
+export type NotesDeps = Pick<Container, "notesRepo" | "eventBroker">;
 
 function assertEnabled(): void {
   if (!isEnabled("notesExample")) {
@@ -16,7 +16,7 @@ function assertEnabled(): void {
   }
 }
 
-export function createNotesService({ notesRepo, transaction, queue }: NotesDeps) {
+export function createNotesService({ notesRepo, eventBroker }: NotesDeps) {
   return {
     list: (): Promise<Note[]> => {
       assertEnabled();
@@ -29,20 +29,10 @@ export function createNotesService({ notesRepo, transaction, queue }: NotesDeps)
       if (!parsed.success) {
         return validationFailure(parsed.error);
       }
-      // The note and its `note.created` event commit together (transactional outbox); the event
-      // processor picks the event up asynchronously.
-      const note = await transaction(async (scope) => {
-        const created = await scope.notesRepo.insert(parsed.data);
-        await scope.outbox.enqueue({ type: "note.created", noteId: created.id });
-        return created;
-      });
+      const note = await notesRepo.insert(parsed.data);
+      // Best effort, after the write succeeded: open tabs refetch the list. Not durable.
+      eventBroker.publish({ type: "note.created", noteId: note.id });
       return ok(note);
-    },
-    /** User-triggered job, not tied to a write: enqueue directly and hand back the id to track. */
-    requestReport: async (): Promise<ActionResult<{ jobId: string }>> => {
-      assertEnabled();
-      const { id } = await queue.enqueue({ type: "notes.report-requested" });
-      return ok({ jobId: id });
     },
   };
 }

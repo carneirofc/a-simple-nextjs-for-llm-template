@@ -17,8 +17,7 @@ Next.js App Router routes, root layout, global providers and CSS. All pages live
 - `api/auth/[...all]/route.ts` returns 404 when auth is disabled; keep it that way.
 - Route handlers for other clients live in `api/v1/<resource>/route.ts`; webhooks in `api/webhooks/<provider>/route.ts`. Both are thin: parse with Zod, resolve the caller, call the feature's `data.ts`, map `Result` codes to `application/problem+json`. Set `Cache-Control` deliberately (`private, no-store` for anything per-user). See `docs/architecture/integrations.md`.
 - Don't fetch your own route handlers from Server Components; call `data.ts` directly.
-- `_events/` (private folder, not a route): `event-handlers.ts` (merges feature handlers into the processor), `realtime-events.ts` (public event matchers + `REALTIME_EVENTS_PATH`), `realtime-listener.tsx` (SSE → `invalidateQueries`, mounted in `[lang]/layout.tsx` when `realtime` is on), `jobs-runner.ts` (inline poller started by `src/instrumentation.ts`). New features register their handlers and realtime events here.
-- `api/v1/jobs/[id]` returns a job's status/progress/result (never its payload); `api/v1/events` is the SSE stream (flag `realtime`); `api/internal/jobs` drains the outbox for `JOBS_RUNNER=external` (Bearer `JOBS_SECRET`, 404 when unset).
+- `_events/` (private folder): `realtime-events.ts` (which events browsers may receive and which query keys they invalidate) and `realtime-listener.tsx` (mounted in `[lang]/layout.tsx` when the `realtime` flag is on). `api/v1/events` is the SSE stream.
 - Don't export `dynamic`, `revalidate` or `fetchCache` segment config (incompatible with `cacheComponents`); see `docs/architecture/caching.md`.
 - Each independently slow section (e.g. a different backend) gets its own async Server Component inside `<Suspense>` so the page streams.
 - Default exports only for Next special files (`page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`).

@@ -49,15 +49,15 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Build UI from `src/components/ui` primitives before writing raw styled elements.
 
 ### Architecture & patterns
-Full rationale and "when to apply" triggers: `docs/architecture/` (read the page for the topic before writing code).
-- **Layers point inward (Biome-enforced folder rules):** `src/components` ✗ `@/app`/`@/features`/`@/server`/`@/env`; `src/lib` + `src/i18n` ✗ `@/app`/`@/features`/`@/server`; `src/server` ✗ `@/app`/`@/features`/`@/components`. Features never import other features.
-- **One core, many transports:** pages, server actions, `/api/v1` route handlers and webhooks all call the same `data.ts` use cases; authorization + Zod validation happen there once. Transports stay thin.
-- **IoC/DI without a container:** ports are behaviour types; adapters are `create<Name>(deps)` factories; `src/server/container.ts` is the only place that picks implementations (reference: `notes` repository port). Use cases take one `deps` object; tests pass fakes, not `vi.mock`. Importing a module never connects or starts anything.
-- **Errors:** expected failures return a `Result` from `src/lib/action-result.ts` (`ok`, `fail`, `validationFailure`); unexpected ones throw `Error` with a message and `cause`. Route handlers map `Result` codes with `problem()`.
-- **Reads vs writes:** client-side reads use `GET` route handlers or RSC prefetch, not server actions (actions are queued one at a time); server actions are for mutations.
-- **Caching:** one `<feature>-cache.ts` contract owns query keys and cache tags. Never put per-user data in a shared cache; nothing request-scoped (cookies, headers, clock) inside `"use cache"`. Mutations invalidate both layers (`updateTag`/`revalidateTag(tag, profile)` + `invalidateQueries`). No `dynamic`/`revalidate` segment exports or `unstable_cache` (incompatible with `cacheComponents`). See `docs/architecture/caching.md`.
-- **Async processing & events:** work enters one queue three ways: (1) an event caused by a write — `outbox.enqueue` inside the same `transaction(...)`, never published after commit by hand; (2) a job the user/client asks for — `queue.enqueue(job)` from a `data.ts` use case, returning the `jobId` the UI tracks with `useJob`; (3) a live-only signal — `eventBroker.publish` (not durable). Events are Zod discriminated unions in `<feature>-events.ts` (`<entity>.<verb-ed>`, thin: IDs only); job request/result schemas in `<feature>-jobs.ts`. Work happens in idempotent handlers (`(event, { jobId, attempt, reportProgress }) => result`) (`<feature>-event-handlers.ts`, registered in `src/app/_events/event-handlers.ts`) run by the outbox processor (retries, dead letter). Browsers learn about events over SSE and only invalidate queries; declare public events with `defineRealtimeEvents`. Best-effort extras may use `after()`. See `docs/architecture/events.md`.
-- **External backends:** one gateway per backend in `src/server/integrations/<backend>/` (client + Zod schemas of their payloads + mapper + gateway implementing a port); every call has a timeout; retries only for idempotent requests. See `docs/architecture/integrations.md`.
+Rationale and "when to apply": `docs/architecture/` — read the page for the topic before writing code.
+- **Layers point inward** (Biome-enforced): components ✗ app/features/server/env; lib, i18n ✗ app/features/server; server ✗ app/features/components. Features never import each other.
+- **One core, many transports:** pages, actions, `/api/v1` routes and webhooks call the same `data.ts` use cases; validation + authorization live there once.
+- **DI without a container:** ports are types, adapters are `create<Name>(deps)` factories, `src/server/container.ts` picks them; tests pass fakes. No side effects at import.
+- **Errors:** expected → `Result` (`src/lib/action-result.ts`); unexpected → `throw new Error(…, { cause })`; routes map codes with `problem()`.
+- **Reads vs writes:** client reads via `GET` routes or RSC prefetch; server actions only for mutations.
+- **Caching:** keys/tags in `<feature>-cache.ts`; no per-user data in shared caches; no `dynamic`/`revalidate` exports. → `caching.md`
+- **Events:** thin Zod events in `<feature>-events.ts`, published from `data.ts` via `eventBroker`, pushed over SSE; browsers only invalidate queries. Best effort; no job queues in this template. → `events.md`
+- **External backends:** one gateway per backend in `src/server/integrations/<backend>/`, timeouts on every call. → `integrations.md`
 
 ### UI & styling
 - Colors come from semantic tokens in `src/app/globals.css` (`bg-primary`, `text-muted-foreground`, `border-border`, `ring-ring`, `text-destructive`, …). No raw palette classes (`zinc-300`, `red-600`); add a token (light + dark) instead.
@@ -97,7 +97,7 @@ Full rationale and "when to apply" triggers: `docs/architecture/` (read the page
   - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — Vitest
   - `pnpm check` — lint + typecheck + test + build
   - `pnpm db:generate` / `db:migrate` / `db:push` / `db:studio` — drizzle-kit (stop `pnpm dev` first when using PGlite; single-process DB)
-- Layout: `src/app/[lang]` localized routes · `src/app/_events` event handler registry, SSE listener, jobs runner · `src/instrumentation.ts` starts the inline outbox poller · `src/proxy.ts` locale redirects · `src/i18n` locales + dictionaries · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
+- Layout: `src/app/[lang]` localized routes · `src/app/_events` realtime registry + SSE listener · `src/proxy.ts` locale redirects · `src/i18n` locales + dictionaries · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
 
 ## Verification
 

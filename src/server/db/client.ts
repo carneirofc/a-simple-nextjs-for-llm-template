@@ -3,9 +3,8 @@ import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
 import { env } from "@/env";
 import * as authSchema from "./schema/auth";
 import * as notesSchema from "./schema/notes";
-import * as outboxSchema from "./schema/outbox";
 
-export const schema = { ...authSchema, ...notesSchema, ...outboxSchema };
+export const schema = { ...authSchema, ...notesSchema };
 
 export type Database = PgDatabase<PgQueryResultHKT, typeof schema>;
 

@@ -39,7 +39,6 @@ describe.each([
         id: expect.any(String),
         title: "Buy milk",
         createdAt: expect.any(Date),
-        processedAt: null,
       });
     });
 
@@ -49,22 +48,6 @@ describe.each([
       const second = await repo.insert({ title: "second" });
 
       expect((await repo.list()).map((note) => note.id)).toEqual([second.id, first.id]);
-    });
-
-    it("marks a note processed exactly once", async () => {
-      const repo = await createRepository();
-      const note = await repo.insert({ title: "work" });
-      const at = new Date("2026-01-01T00:00:00.000Z");
-
-      expect(await repo.markProcessed(note.id, at)).toBe(true);
-      expect(await repo.markProcessed(note.id, new Date())).toBe(false);
-      expect((await repo.list())[0]?.processedAt).toEqual(at);
-    });
-
-    it("ignores unknown notes", async () => {
-      const repo = await createRepository();
-
-      expect(await repo.markProcessed(crypto.randomUUID(), new Date())).toBe(false);
     });
   },
   30_000,

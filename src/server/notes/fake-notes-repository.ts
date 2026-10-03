@@ -7,22 +7,9 @@ export function createFakeNotesRepository(seed: readonly Note[] = []): NotesRepo
   return {
     list: () => Promise.resolve([...rows]),
     insert: (values) => {
-      const created: Note = {
-        id: crypto.randomUUID(),
-        createdAt: new Date(),
-        processedAt: null,
-        ...values,
-      };
+      const created: Note = { id: crypto.randomUUID(), createdAt: new Date(), ...values };
       rows = [created, ...rows];
       return Promise.resolve(created);
-    },
-    markProcessed: (id, at) => {
-      const note = rows.find((row) => row.id === id);
-      if (!note || note.processedAt) {
-        return Promise.resolve(false);
-      }
-      rows = rows.map((row) => (row.id === id ? { ...row, processedAt: at } : row));
-      return Promise.resolve(true);
     },
   };
 }

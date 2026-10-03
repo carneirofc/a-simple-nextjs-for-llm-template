@@ -7,7 +7,6 @@ import { GET } from "./route";
 const NOTE = {
   id: "4f6c1c56-7f0a-4bd4-9c39-2f5b3b0c1e11",
   title: "Buy milk",
-  processedAt: null,
   createdAt: new Date("2026-01-02T03:04:05.000Z"),
 };
 
@@ -25,9 +24,7 @@ describe("GET /api/v1/notes", () => {
     expect(response.status).toBe(200);
     expect(response.headers.get("etag")).toBeTruthy();
     const body: unknown = await response.json();
-    expect(body).toEqual({
-      items: [{ ...NOTE, createdAt: "2026-01-02T03:04:05.000Z", processedAt: null }],
-    });
+    expect(body).toEqual({ items: [{ ...NOTE, createdAt: "2026-01-02T03:04:05.000Z" }] });
     expect(notesListResponseSchema.parse(body).items[0]?.createdAt).toEqual(NOTE.createdAt);
   });
 

@@ -22,16 +22,6 @@ export const en = {
       empty: "No notes yet.",
       title: "Title",
       created: "Created",
-      status: "Status",
-      processing: "Processing…",
-      ready: "Ready",
-    },
-    report: {
-      request: "Generate report",
-      queued: "Report queued…",
-      running: "Generating report… {progress}%",
-      done: "Report: {count} notes, {processed} processed.",
-      failed: "The report could not be generated.",
     },
   },
   validation: {

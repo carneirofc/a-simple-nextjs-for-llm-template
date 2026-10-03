@@ -13,8 +13,6 @@ export const noteResponseSchema = z.object({
   id: z.uuid(),
   title: z.string(),
   createdAt: isoDate,
-  /** `null` while the async `note.created` processing has not finished. */
-  processedAt: isoDate.nullable(),
 });
 
 export const notesListResponseSchema = z.object({

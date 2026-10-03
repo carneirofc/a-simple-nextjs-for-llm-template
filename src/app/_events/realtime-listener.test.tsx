@@ -30,7 +30,7 @@ describe("RealtimeListener", () => {
     const { invalidate, source } = mount();
     const noteId = crypto.randomUUID();
 
-    source.onmessage?.({ data: JSON.stringify({ type: "note.processed", noteId }) });
+    source.onmessage?.({ data: JSON.stringify({ type: "note.created", noteId }) });
 
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notes"] });
   });

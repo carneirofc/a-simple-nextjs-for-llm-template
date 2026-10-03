@@ -199,13 +199,7 @@
       }
     },
     {
-      "includes": [
-        "src/env.ts",
-        "*.config.ts",
-        "*.config.mts",
-        "src/app/providers.tsx",
-        "src/instrumentation.ts"
-      ],
+      "includes": ["src/env.ts", "*.config.ts", "*.config.mts", "src/app/providers.tsx"],
       "linter": {
         "rules": {
           "style": {

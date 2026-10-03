@@ -23,12 +23,12 @@ describe("GET /api/v1/events", () => {
     await readChunk(reader); // retry frame
     const noteId = crypto.randomUUID();
 
-    broker.publish({ id: "e1", occurredAt: new Date(), event: { type: "internal.audit" } });
-    broker.publish({ id: "e2", occurredAt: new Date(), event: { type: "note.processed", noteId } });
+    broker.publish({ type: "internal.audit" });
+    broker.publish({ type: "note.created", noteId });
 
     expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
-    expect(await readChunk(reader)).toBe(
-      `id: e2\ndata: {"type":"note.processed","noteId":"${noteId}"}\n\n`,
+    expect(await readChunk(reader)).toMatch(
+      new RegExp(`^id: [0-9a-f-]{36}\ndata: \\{"type":"note.created","noteId":"${noteId}"\\}\n\n$`),
     );
     controller.abort();
   });

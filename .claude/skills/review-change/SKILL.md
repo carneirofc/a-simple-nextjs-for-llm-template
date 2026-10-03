@@ -29,7 +29,7 @@ description: Review the current diff (or a named branch/PR) against this repo's 
 - Expected failures return a `Result`; unexpected ones throw with a message.
 - New dependency on an external system goes through a port + gateway with timeouts, Zod-validated responses and a fake for tests; implementation chosen only in `src/server/container.ts`.
 - Caching: keys/tags come from `<feature>-cache.ts`; no per-user data in shared caches; no cookies/headers/clock inside `"use cache"`; every mutation invalidates the server tag and the TanStack key; no `dynamic`/`revalidate` segment exports.
-- Side effects: events caused by writes enqueued inside the same `transaction(...)` (no publish-after-commit); user-triggered jobs enqueued via `queue` from `data.ts` after validation/authorization, returning a `jobId`; per-user job results checked in the status route; handlers idempotent and registered in `src/app/_events/`; only events declared with `defineRealtimeEvents` reach the browser; `after()` only for best-effort work.
+- Side effects: `after()` for best effort; events are thin Zod unions published from `data.ts` and declared with `defineRealtimeEvents` before reaching the browser; no queues/workers/retry loops added to the template (external job service behind a port instead); webhooks verified and idempotent.
 - Pattern introduced without its trigger from `docs/architecture/README.md` (adoption status) ⇒ over-engineering finding.
 
 **UI**

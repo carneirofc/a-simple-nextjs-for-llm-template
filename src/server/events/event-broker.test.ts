@@ -1,19 +1,24 @@
 import { describe, expect, it, vi } from "vitest";
 import { createInMemoryEventBroker } from "./event-broker";
 
-const EVENT = { id: crypto.randomUUID(), occurredAt: new Date(), event: { type: "a" } };
+const NOW = new Date("2026-01-01T00:00:00.000Z");
 
 describe("createInMemoryEventBroker", () => {
-  it("delivers to subscribers until they unsubscribe", () => {
-    const broker = createInMemoryEventBroker();
+  it("wraps events with an id and timestamp and delivers them until unsubscribed", () => {
+    const broker = createInMemoryEventBroker(() => NOW);
     const listener = vi.fn();
     const unsubscribe = broker.subscribe(listener);
 
-    broker.publish(EVENT);
+    broker.publish({ type: "a.happened" });
     unsubscribe();
-    broker.publish(EVENT);
+    broker.publish({ type: "a.happened" });
 
     expect(listener).toHaveBeenCalledOnce();
+    expect(listener).toHaveBeenCalledWith({
+      id: expect.any(String),
+      occurredAt: NOW,
+      event: { type: "a.happened" },
+    });
   });
 
   it("keeps delivering when one listener throws", () => {
@@ -25,8 +30,8 @@ describe("createInMemoryEventBroker", () => {
     });
     broker.subscribe(healthy);
 
-    broker.publish(EVENT);
+    broker.publish({ type: "a.happened" });
 
-    expect(healthy).toHaveBeenCalledWith(EVENT);
+    expect(healthy).toHaveBeenCalledOnce();
   });
 });
