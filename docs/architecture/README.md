@@ -18,7 +18,7 @@ Design patterns and coding principles for code built on this template. `AGENTS.m
 ┌───────────────────────────────┐   ┌──────────────────────────────┐   ┌────────────────────────────┐
 │ Server Components (page.tsx)  │   │ <feature>/data.ts            │   │ Drizzle (getDb)            │
 │ Server actions (actions.ts)   │──▶│  authorize → validate (Zod)  │──▶│ integrations/<backend>/*   │
-│ Route handlers (api/v1/**)    │   │  → use case → emit events    │   │ cache handler, event bus   │
+│ Route handlers (api/v1/**)    │   │  → use case → emit events    │   │ outbox, event broker (SSE) │
 │ Webhooks (api/webhooks/**)    │   │ ports = types it depends on  │   │ (implement the ports)      │
 └───────────────────────────────┘   └──────────────────────────────┘   └────────────────────────────┘
         ▲ client components call actions / route handlers through TanStack Query
@@ -41,6 +41,7 @@ Design patterns and coding principles for code built on this template. `AGENTS.m
 | Read transport for any client | `src/app/api/v1/notes/route.ts` + `notes-api-schemas.ts` (wire contract, Zod codec for dates) + `src/server/http/json-response.ts` (ETag/304, problem+json) |
 | Browser cache | `notes-cache.ts` (keys) → `queries.ts` (`fetchNotes` from `notes-api-client.ts`) → `notes-panel.tsx` (invalidate on success) |
 | Shared input rules | `notes-schema.ts` (plain Zod; used by the form and the use case) |
+| Async processing + realtime | `notes-events.ts` (event schemas + query keys to invalidate), `notes-event-handlers.ts`, `data.ts` (note + `note.created` in one unit of work), `src/server/events/*`, `src/app/_events/*`, `src/instrumentation.ts` |
 
 ## Enforced boundaries (`biome.json`)
 
@@ -70,9 +71,10 @@ Patterns are added when the first real need appears, not up front (YAGNI). The t
 | Next `"use cache"` + `cacheTag` (`cacheComponents`) | Proposed | first data shared across users that is expensive to read |
 | Shared cache handler (Redis) | Proposed | running more than one server instance |
 | OpenAPI generated from the API schemas | Rule | first non-browser client |
-| In-process domain events + `after()` | Rule | first side effect that is not the use case itself |
-| Transactional outbox + worker | Proposed | first side effect that must survive a crash, or cross-service event |
-| SSE invalidation channel | Proposed | first screen that must update when another user writes |
+| Transactional outbox + event processor (retries, dead letter) + `after()` for best effort | **In use** | — |
+| SSE invalidation channel (`/api/v1/events` → `RealtimeListener`) | **In use** | — |
+| Multi-instance event fan-out (`LISTEN/NOTIFY` broker adapter) | Proposed | running more than one server instance with `FEATURE_REALTIME` |
+| pg-boss / workflow engine (Inngest, Trigger.dev) | Proposed | cron schedules, priorities, or durable multi-step workflows |
 | Backend gateway (anti-corruption layer) | Rule | first external backend |
 
 "Rule" = the convention is decided; follow it the first time the trigger happens. "Proposed" = needs infrastructure or a dependency; agree on it with the maintainer before adding.

@@ -22,6 +22,9 @@ export const en = {
       empty: "No notes yet.",
       title: "Title",
       created: "Created",
+      status: "Status",
+      processing: "Processing…",
+      ready: "Ready",
     },
   },
   validation: {

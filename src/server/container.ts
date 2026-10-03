@@ -1,6 +1,9 @@
 import "server-only";
 import { getDb } from "./db/client";
+import { createDrizzleOutboxStore } from "./events/drizzle-outbox";
+import { getProcessEventBroker } from "./events/event-broker";
 import { createDrizzleNotesRepository } from "./notes/drizzle-notes-repository";
+import { createDrizzleUnitOfWork } from "./unit-of-work";
 
 /**
  * Composition root: the only place that chooses port implementations (adapters). Features build
@@ -10,6 +13,12 @@ async function createContainer() {
   const db = await getDb();
   return {
     notesRepo: createDrizzleNotesRepository(db),
+    /** Atomic writes: state change + outbox event (see `unit-of-work.ts`). */
+    transaction: createDrizzleUnitOfWork(db),
+    outboxStore: createDrizzleOutboxStore(db),
+    /** Single-process fan-out; replace for multi-instance deployments (docs/architecture/events.md). */
+    eventBroker: getProcessEventBroker(),
+    clock: (): Date => new Date(),
   };
 }
 

@@ -6,6 +6,8 @@ export const notes = pgTable("notes", {
   id: uuid().primaryKey().defaultRandom(),
   title: text().notNull(),
   createdAt: timestamp().notNull().defaultNow(),
+  /** Set by the async `note.created` handler; `null` while the note is still being processed. */
+  processedAt: timestamp(),
 });
 
 // DB shapes, always derived from the table. User-facing validation rules live in the feature

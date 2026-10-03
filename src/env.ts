@@ -13,6 +13,13 @@ export const env = createEnv({
 
     FEATURE_AUTH: flag(false),
     FEATURE_NOTES_EXAMPLE: flag(true),
+    FEATURE_REALTIME: flag(true),
+
+    // Outbox event processing: `inline` polls inside each server instance; `external` leaves it to
+    // a scheduler calling `POST /api/internal/jobs` with `Authorization: Bearer $JOBS_SECRET`.
+    JOBS_RUNNER: z.enum(["inline", "external"]).default("inline"),
+    JOBS_POLL_INTERVAL_MS: z.coerce.number().int().min(100).default(1000),
+    JOBS_SECRET: z.string().min(32).optional(),
 
     BETTER_AUTH_SECRET: z.string().min(32).optional(),
     BETTER_AUTH_URL: z.url().optional(),

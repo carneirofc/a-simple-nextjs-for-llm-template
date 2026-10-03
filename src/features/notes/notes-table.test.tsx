@@ -8,6 +8,7 @@ import { NotesTable } from "./notes-table";
 const NOTE: Note = {
   id: "00000000-0000-4000-8000-000000000000",
   title: "First",
+  processedAt: null,
   createdAt: new Date("2026-01-01T13:00:00.000Z"),
 };
 

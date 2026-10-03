@@ -19,6 +19,9 @@ export const ptBr: Dictionary = {
       empty: "Nenhuma nota ainda.",
       title: "Título",
       created: "Criada em",
+      status: "Status",
+      processing: "Processando…",
+      ready: "Pronta",
     },
   },
   validation: {

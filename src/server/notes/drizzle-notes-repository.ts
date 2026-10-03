@@ -1,5 +1,5 @@
 import "server-only";
-import { desc } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import type { Database } from "@/server/db/client";
 import { notes } from "@/server/db/schema/notes";
 import type { NotesRepository } from "./notes-ports";
@@ -13,6 +13,14 @@ export function createDrizzleNotesRepository(db: Database): NotesRepository {
         throw new Error("Insert returned no row");
       }
       return created;
+    },
+    markProcessed: async (id, at) => {
+      const updated = await db
+        .update(notes)
+        .set({ processedAt: at })
+        .where(and(eq(notes.id, id), isNull(notes.processedAt)))
+        .returning({ id: notes.id });
+      return updated.length > 0;
     },
   };
 }

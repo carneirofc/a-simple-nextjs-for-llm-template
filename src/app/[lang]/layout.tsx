@@ -3,6 +3,8 @@ import "../globals.css";
 import { locales } from "@/i18n/config";
 import { LocaleSwitcher } from "@/i18n/locale-switcher";
 import { getDictionary, getLocale } from "@/i18n/server";
+import { isEnabled } from "@/lib/flags";
+import { RealtimeListener } from "../_events/realtime-listener";
 import { Providers } from "../providers";
 
 export function generateStaticParams() {
@@ -23,7 +25,10 @@ export default async function RootLayout({ children }: LayoutProps<"/[lang]">) {
         <header className="mx-auto flex w-full max-w-2xl justify-end px-8 pt-4">
           <LocaleSwitcher current={locale} label={dictionary.localeSwitcher.label} />
         </header>
-        <Providers>{children}</Providers>
+        <Providers>
+          {isEnabled("realtime") ? <RealtimeListener /> : null}
+          {children}
+        </Providers>
       </body>
     </html>
   );

@@ -16,5 +16,10 @@ export function createNotesColumns(labels: Dictionary["notes"]["table"], locale:
       header: labels.created,
       cell: (info) => formatDateTime(info.getValue(), locale),
     }),
+    // `processedAt` is filled in asynchronously; realtime events refresh this column.
+    columnHelper.accessor("processedAt", {
+      header: labels.status,
+      cell: (info) => (info.getValue() ? labels.ready : labels.processing),
+    }),
   ]);
 }

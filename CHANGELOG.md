@@ -6,6 +6,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ## [Unreleased]
 
 ### Added
+- Event-driven async processing: transactional outbox (`outbox_events` table, Drizzle `FOR UPDATE SKIP LOCKED` queue with exponential backoff, dead letter and stale-lock recovery), unit of work (`transaction(...)`) so state changes and events commit together, event processor with feature handler registry, inline poller started from `src/instrumentation.ts` (`JOBS_RUNNER=inline`) or `POST /api/internal/jobs` for schedulers (`JOBS_RUNNER=external`, `JOBS_SECRET`).
+- Realtime UI updates: Server-Sent Events at `/api/v1/events` (flag `FEATURE_REALTIME`), `useEventSource` hook and `RealtimeListener` that invalidate TanStack Query keys per event (full resync after reconnect).
+- Notes example: `note.created` is processed asynchronously (`processedAt`, new "Status" column) and emits `note.processed`; open tabs update without reloading. Custom migration backfills `processed_at` for existing notes.
+- `docs/architecture/events.md`: library comparison (pg-boss, graphile-worker, BullMQ, Inngest, Trigger.dev, Vercel Queues, Hatchet; EventSource vs WebSockets/hosted) and the chosen design.
 - Radix Primitives (`radix-ui`) as the base for shared UI components.
 - `Label` primitive (`src/components/ui/label.tsx`) built on Radix `Label`.
 - `Button` `asChild` prop (Radix `Slot`) to render links or other elements with button styles.

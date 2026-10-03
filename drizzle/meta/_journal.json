@@ -8,6 +8,20 @@
       "when": 1790604502727,
       "tag": "0000_wild_spencer_smythe",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791053442856,
+      "tag": "0001_left_karnak",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791053836513,
+      "tag": "0002_backfill_notes_processed_at",
+      "breakpoints": true
     }
   ]
 }

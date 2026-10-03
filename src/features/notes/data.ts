@@ -8,7 +8,7 @@ import { noteInputSchema } from "./notes-schema";
 // Use cases. Every transport (Server Components, actions, `/api/v1` route handlers) calls these, so
 // feature-flag checks, validation and (when needed) authorization live here once.
 
-export type NotesDeps = Pick<Container, "notesRepo">;
+export type NotesDeps = Pick<Container, "notesRepo" | "transaction">;
 
 function assertEnabled(): void {
   if (!isEnabled("notesExample")) {
@@ -16,7 +16,7 @@ function assertEnabled(): void {
   }
 }
 
-export function createNotesService({ notesRepo }: NotesDeps) {
+export function createNotesService({ notesRepo, transaction }: NotesDeps) {
   return {
     list: (): Promise<Note[]> => {
       assertEnabled();
@@ -29,7 +29,14 @@ export function createNotesService({ notesRepo }: NotesDeps) {
       if (!parsed.success) {
         return validationFailure(parsed.error);
       }
-      return ok(await notesRepo.insert(parsed.data));
+      // The note and its `note.created` event commit together (transactional outbox); the event
+      // processor picks the event up asynchronously.
+      const note = await transaction(async (scope) => {
+        const created = await scope.notesRepo.insert(parsed.data);
+        await scope.outbox.enqueue({ type: "note.created", noteId: created.id });
+        return created;
+      });
+      return ok(note);
     },
   };
 }

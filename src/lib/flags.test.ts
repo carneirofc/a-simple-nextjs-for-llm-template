@@ -10,11 +10,12 @@ describe("flags", () => {
   beforeEach(() => {
     vi.stubEnv("FEATURE_AUTH", "");
     vi.stubEnv("FEATURE_NOTES_EXAMPLE", "");
+    vi.stubEnv("FEATURE_REALTIME", "");
   });
 
   it("uses defaults when env vars are unset", async () => {
     const { flags } = await loadFlags();
-    expect(flags).toEqual({ auth: false, notesExample: true });
+    expect(flags).toEqual({ auth: false, notesExample: true, realtime: true });
   });
 
   it("reads FEATURE_* env vars", async () => {

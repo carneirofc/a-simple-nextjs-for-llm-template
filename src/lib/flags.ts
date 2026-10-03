@@ -8,6 +8,7 @@ import { env } from "@/env";
 export const flagsSchema = z.object({
   auth: z.boolean(),
   notesExample: z.boolean(),
+  realtime: z.boolean(),
 });
 
 export type Flags = z.infer<typeof flagsSchema>;
@@ -16,6 +17,7 @@ export type FlagName = keyof Flags;
 export const flags: Flags = flagsSchema.parse({
   auth: env.FEATURE_AUTH,
   notesExample: env.FEATURE_NOTES_EXAMPLE,
+  realtime: env.FEATURE_REALTIME,
 });
 
 export function isEnabled(name: FlagName): boolean {

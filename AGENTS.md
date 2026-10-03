@@ -56,7 +56,7 @@ Full rationale and "when to apply" triggers: `docs/architecture/` (read the page
 - **Errors:** expected failures return a `Result` from `src/lib/action-result.ts` (`ok`, `fail`, `validationFailure`); unexpected ones throw `Error` with a message and `cause`. Route handlers map `Result` codes with `problem()`.
 - **Reads vs writes:** client-side reads use `GET` route handlers or RSC prefetch, not server actions (actions are queued one at a time); server actions are for mutations.
 - **Caching:** one `<feature>-cache.ts` contract owns query keys and cache tags. Never put per-user data in a shared cache; nothing request-scoped (cookies, headers, clock) inside `"use cache"`. Mutations invalidate both layers (`updateTag`/`revalidateTag(tag, profile)` + `invalidateQueries`). No `dynamic`/`revalidate` segment exports or `unstable_cache` (incompatible with `cacheComponents`). See `docs/architecture/caching.md`.
-- **Side effects & events:** non-critical work in `after()`; events are Zod discriminated unions (`<entity>.<verb-ed>`, thin, with `id`); anything that must not be lost uses a transactional outbox, not an in-memory bus. See `docs/architecture/events.md`.
+- **Async processing & events:** domain events are Zod discriminated unions in `<feature>-events.ts` (`<entity>.<verb-ed>`, thin: IDs only). Emit them with `outbox.enqueue` inside the same `transaction(...)` as the state change; never publish after commit by hand. Work happens in idempotent handlers (`<feature>-event-handlers.ts`, registered in `src/app/_events/event-handlers.ts`) run by the outbox processor (retries, dead letter). Browsers learn about events over SSE and only invalidate queries; declare public events with `defineRealtimeEvents`. Best-effort extras may use `after()`. See `docs/architecture/events.md`.
 - **External backends:** one gateway per backend in `src/server/integrations/<backend>/` (client + Zod schemas of their payloads + mapper + gateway implementing a port); every call has a timeout; retries only for idempotent requests. See `docs/architecture/integrations.md`.
 
 ### UI & styling
@@ -97,7 +97,7 @@ Full rationale and "when to apply" triggers: `docs/architecture/` (read the page
   - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — Vitest
   - `pnpm check` — lint + typecheck + test + build
   - `pnpm db:generate` / `db:migrate` / `db:push` / `db:studio` — drizzle-kit (stop `pnpm dev` first when using PGlite; single-process DB)
-- Layout: `src/app/[lang]` localized routes · `src/proxy.ts` locale redirects · `src/i18n` locales + dictionaries · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
+- Layout: `src/app/[lang]` localized routes · `src/app/_events` event handler registry, SSE listener, jobs runner · `src/instrumentation.ts` starts the inline outbox poller · `src/proxy.ts` locale redirects · `src/i18n` locales + dictionaries · `src/features/<name>` feature UI + server actions + query options · `src/components/ui` shared presentational primitives · `src/lib` shared client/server utils · `src/server` server-only code · `src/test` test setup.
 
 ## Verification
 
