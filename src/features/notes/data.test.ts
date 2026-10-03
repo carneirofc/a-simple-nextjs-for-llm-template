@@ -11,7 +11,9 @@ function setup() {
   const notesRepo = createFakeNotesRepository();
   const outbox = createFakeOutbox();
   const transaction = createFakeUnitOfWork({ notesRepo, outbox });
-  return { notesRepo, outbox, service: createNotesService({ notesRepo, transaction }) };
+  const queue = createFakeOutbox();
+  const service = createNotesService({ notesRepo, transaction, queue });
+  return { notesRepo, outbox, queue, service };
 }
 
 describe("notes service", () => {
@@ -56,5 +58,18 @@ describe("notes service", () => {
       ok: false,
       error: { code: "validation" },
     });
+  });
+
+  it("enqueues a report job without writing any note", async () => {
+    const { service, queue, notesRepo } = setup();
+
+    const result = await service.requestReport();
+
+    const jobId = result.ok ? result.data.jobId : "";
+    expect(await queue.get(jobId)).toMatchObject({
+      type: "notes.report-requested",
+      status: "pending",
+    });
+    expect(await notesRepo.list()).toEqual([]);
   });
 });

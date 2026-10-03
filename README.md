@@ -48,7 +48,7 @@ URLs are prefixed with a locale (`/en`, `/pt-BR`); `/` redirects using the `NEXT
 
 ## Async processing and realtime
 
-Writes enqueue domain events in an outbox table in the same transaction; a poller started by `src/instrumentation.ts` processes them (retries, dead letter) and streams public events to the browser over SSE (`/api/v1/events`), where TanStack Query refetches what changed. Serverless: set `JOBS_RUNNER=external` and call `POST /api/internal/jobs` from a scheduler. Details: [docs/architecture/events.md](docs/architecture/events.md).
+Writes enqueue domain events in an outbox table in the same transaction, and users/clients can enqueue jobs directly (tracked by id with progress and result via `/api/v1/jobs/:id` and `useJob`); a poller started by `src/instrumentation.ts` processes them (retries, dead letter) and streams public events to the browser over SSE (`/api/v1/events`), where TanStack Query refetches what changed. Serverless: set `JOBS_RUNNER=external` and call `POST /api/internal/jobs` from a scheduler. Details: [docs/architecture/events.md](docs/architecture/events.md).
 
 ## Configuration
 

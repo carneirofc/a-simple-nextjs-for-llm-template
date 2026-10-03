@@ -23,6 +23,13 @@ export const ptBr: Dictionary = {
       processing: "Processando…",
       ready: "Pronta",
     },
+    report: {
+      request: "Gerar relatório",
+      queued: "Relatório na fila…",
+      running: "Gerando relatório… {progress}%",
+      done: "Relatório: {count} notas, {processed} processadas.",
+      failed: "Não foi possível gerar o relatório.",
+    },
   },
   validation: {
     required: "Este campo é obrigatório",

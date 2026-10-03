@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb } from "./db/client";
-import { createDrizzleOutboxStore } from "./events/drizzle-outbox";
+import { createDrizzleOutbox, createDrizzleOutboxStore } from "./events/drizzle-outbox";
 import { getProcessEventBroker } from "./events/event-broker";
 import { createDrizzleNotesRepository } from "./notes/drizzle-notes-repository";
 import { createDrizzleUnitOfWork } from "./unit-of-work";
@@ -15,10 +15,16 @@ async function createContainer() {
     notesRepo: createDrizzleNotesRepository(db),
     /** Atomic writes: state change + outbox event (see `unit-of-work.ts`). */
     transaction: createDrizzleUnitOfWork(db),
+    /**
+     * Enqueue work that is not tied to a write (a user clicks "generate report", a client calls an
+     * API, a webhook arrives). Swap this adapter for BullMQ/SQS/pg-boss without touching features.
+     */
+    queue: createDrizzleOutbox(db),
     outboxStore: createDrizzleOutboxStore(db),
     /** Single-process fan-out; replace for multi-instance deployments (docs/architecture/events.md). */
     eventBroker: getProcessEventBroker(),
     clock: (): Date => new Date(),
+    sleep: (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms)),
   };
 }
 

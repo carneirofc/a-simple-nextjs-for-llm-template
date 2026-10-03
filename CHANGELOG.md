@@ -6,6 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ## [Unreleased]
 
 ### Added
+- User-triggered background jobs, not tied to a database write: `MessageQueue` port (`queue.enqueue(job, { runAt, maxAttempts })` → `{ id }`) in the container, handler context (`jobId`, `attempt`, `reportProgress`) and stored results, `job.updated` lifecycle events over SSE, `GET /api/v1/jobs/:id` status endpoint, client-safe job contract (`src/lib/jobs.ts`) and `useJob` hook. Notes example: "Generate report" enqueues `notes.report-requested` and shows live progress and the result.
 - Event-driven async processing: transactional outbox (`outbox_events` table, Drizzle `FOR UPDATE SKIP LOCKED` queue with exponential backoff, dead letter and stale-lock recovery), unit of work (`transaction(...)`) so state changes and events commit together, event processor with feature handler registry, inline poller started from `src/instrumentation.ts` (`JOBS_RUNNER=inline`) or `POST /api/internal/jobs` for schedulers (`JOBS_RUNNER=external`, `JOBS_SECRET`).
 - Realtime UI updates: Server-Sent Events at `/api/v1/events` (flag `FEATURE_REALTIME`), `useEventSource` hook and `RealtimeListener` that invalidate TanStack Query keys per event (full resync after reconnect).
 - Notes example: `note.created` is processed asynchronously (`processedAt`, new "Status" column) and emits `note.processed`; open tabs update without reloading. Custom migration backfills `processed_at` for existing notes.

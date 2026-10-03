@@ -8,7 +8,7 @@ import { noteInputSchema } from "./notes-schema";
 // Use cases. Every transport (Server Components, actions, `/api/v1` route handlers) calls these, so
 // feature-flag checks, validation and (when needed) authorization live here once.
 
-export type NotesDeps = Pick<Container, "notesRepo" | "transaction">;
+export type NotesDeps = Pick<Container, "notesRepo" | "transaction" | "queue">;
 
 function assertEnabled(): void {
   if (!isEnabled("notesExample")) {
@@ -16,7 +16,7 @@ function assertEnabled(): void {
   }
 }
 
-export function createNotesService({ notesRepo, transaction }: NotesDeps) {
+export function createNotesService({ notesRepo, transaction, queue }: NotesDeps) {
   return {
     list: (): Promise<Note[]> => {
       assertEnabled();
@@ -37,6 +37,12 @@ export function createNotesService({ notesRepo, transaction }: NotesDeps) {
         return created;
       });
       return ok(note);
+    },
+    /** User-triggered job, not tied to a write: enqueue directly and hand back the id to track. */
+    requestReport: async (): Promise<ActionResult<{ jobId: string }>> => {
+      assertEnabled();
+      const { id } = await queue.enqueue({ type: "notes.report-requested" });
+      return ok({ jobId: id });
     },
   };
 }

@@ -1,11 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it } from "vitest";
-import type { Outbox, OutboxStore } from "./outbox-ports";
+import type { MessageQueue, OutboxStore } from "./outbox-ports";
 import { LOCK_TIMEOUT_MS } from "./outbox-ports";
 
 // Contract test: the fake and the Drizzle adapters must behave the same.
 
-type TestOutbox = Outbox & OutboxStore;
+type TestOutbox = MessageQueue & OutboxStore;
 
 async function createPgliteOutbox(): Promise<TestOutbox> {
   const [{ PGlite }, { drizzle }, { migrate }, { schema }, adapters] = await Promise.all([
@@ -54,7 +54,7 @@ describe.each([
       await outbox.enqueue({ type: "b" });
       const claimed = await outbox.claim({ now: later(1000), limit: 10 });
 
-      await outbox.complete(claimed[0]?.id ?? "", new Date());
+      await outbox.complete(claimed[0]?.id ?? "", { now: new Date() });
       await outbox.fail(claimed[1]?.id ?? "", "boom");
 
       expect(await outbox.claim({ now: later(LOCK_TIMEOUT_MS * 2), limit: 10 })).toEqual([]);
@@ -88,6 +88,29 @@ describe.each([
       await outbox.enqueue({ type: "b" });
 
       expect(await outbox.claim({ now: later(1000), limit: 1 })).toHaveLength(1);
+    });
+
+    it("returns the job id and exposes progress and result by id", async () => {
+      const outbox = await createOutbox();
+      const { id } = await outbox.enqueue({ type: "report.requested" });
+      await outbox.claim({ now: later(1000), limit: 10 });
+
+      await outbox.setProgress(id, 40);
+      expect(await outbox.get(id)).toMatchObject({ status: "running", progress: 40 });
+
+      await outbox.complete(id, { now: new Date(), result: { rows: 3 } });
+      expect(await outbox.get(id)).toMatchObject({ status: "done", result: { rows: 3 } });
+      expect(await outbox.get(crypto.randomUUID())).toBeUndefined();
+    });
+
+    it("honours delayed jobs and custom max attempts", async () => {
+      const outbox = await createOutbox();
+      const { id } = await outbox.enqueue({ type: "a" }, { runAt: later(60_000), maxAttempts: 1 });
+
+      expect(await outbox.claim({ now: later(1000), limit: 10 })).toEqual([]);
+      expect(await outbox.claim({ now: later(61_000), limit: 10 })).toEqual([
+        expect.objectContaining({ id, maxAttempts: 1 }),
+      ]);
     });
   },
   30_000,

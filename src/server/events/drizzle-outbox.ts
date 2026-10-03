@@ -2,12 +2,19 @@ import "server-only";
 import { and, asc, eq, inArray, lt, lte, or, sql } from "drizzle-orm";
 import type { Database } from "@/server/db/client";
 import { outboxEvents } from "@/server/db/schema/outbox";
-import { LOCK_TIMEOUT_MS, type Outbox, type OutboxStore } from "./outbox-ports";
+import { LOCK_TIMEOUT_MS, type MessageQueue, type OutboxStore } from "./outbox-ports";
 
-export function createDrizzleOutbox(db: Database): Outbox {
+export function createDrizzleOutbox(db: Database): MessageQueue {
   return {
-    enqueue: async (event) => {
-      await db.insert(outboxEvents).values({ type: event.type, payload: event });
+    enqueue: async (message, { runAt, maxAttempts } = {}) => {
+      const [row] = await db
+        .insert(outboxEvents)
+        .values({ type: message.type, payload: message, runAt, maxAttempts })
+        .returning({ id: outboxEvents.id });
+      if (!row) {
+        throw new Error("Enqueue returned no row");
+      }
+      return row;
     },
   };
 }
@@ -52,10 +59,17 @@ function claimDue(db: Database, { now, limit }: { now: Date; limit: number }) {
 export function createDrizzleOutboxStore(db: Database): OutboxStore {
   return {
     claim: (options) => claimDue(db, options),
-    complete: async (id, now) => {
+    get: async (id) => {
+      const [row] = await db.select().from(outboxEvents).where(eq(outboxEvents.id, id));
+      return row;
+    },
+    setProgress: async (id, progress) => {
+      await db.update(outboxEvents).set({ progress }).where(eq(outboxEvents.id, id));
+    },
+    complete: async (id, { now, result = null }) => {
       await db
         .update(outboxEvents)
-        .set({ status: "done", completedAt: now, lockedAt: null, lastError: null })
+        .set({ status: "done", completedAt: now, result, lockedAt: null, lastError: null })
         .where(eq(outboxEvents.id, id));
     },
     retry: async (id, { error, runAt }) => {

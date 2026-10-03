@@ -26,6 +26,13 @@ export const en = {
       processing: "Processing…",
       ready: "Ready",
     },
+    report: {
+      request: "Generate report",
+      queued: "Report queued…",
+      running: "Generating report… {progress}%",
+      done: "Report: {count} notes, {processed} processed.",
+      failed: "The report could not be generated.",
+    },
   },
   validation: {
     required: "This field is required",

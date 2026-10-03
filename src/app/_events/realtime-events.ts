@@ -1,4 +1,5 @@
 import { notesRealtimeEvents } from "@/features/notes/notes-events";
+import { jobsRealtimeEvents } from "@/lib/jobs";
 import { combineRealtimeEvents } from "@/lib/realtime";
 
 // Every event type browsers may receive, with the query keys it invalidates. Used by the SSE route
@@ -6,4 +7,4 @@ import { combineRealtimeEvents } from "@/lib/realtime";
 
 export const REALTIME_EVENTS_PATH = "/api/v1/events";
 
-export const matchRealtimeEvent = combineRealtimeEvents([notesRealtimeEvents]);
+export const matchRealtimeEvent = combineRealtimeEvents([jobsRealtimeEvents, notesRealtimeEvents]);
