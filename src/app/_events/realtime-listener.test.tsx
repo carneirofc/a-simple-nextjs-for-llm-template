@@ -5,10 +5,12 @@ import { RealtimeListener } from "./realtime-listener";
 
 class FakeEventSource {
   static last: FakeEventSource | undefined;
+  readonly url: string;
   onopen: (() => void) | null = null;
   onmessage: ((event: { data: string }) => void) | null = null;
   close = vi.fn();
-  constructor() {
+  constructor(url: string) {
+    this.url = url;
     FakeEventSource.last = this;
   }
 }
@@ -17,12 +19,12 @@ function mount() {
   vi.stubGlobal("EventSource", FakeEventSource);
   const queryClient = new QueryClient();
   const invalidate = vi.spyOn(queryClient, "invalidateQueries").mockResolvedValue(undefined);
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <RealtimeListener />
     </QueryClientProvider>,
   );
-  return { invalidate, source: FakeEventSource.last as FakeEventSource };
+  return { invalidate, view, source: FakeEventSource.last as FakeEventSource };
 }
 
 describe("RealtimeListener", () => {
@@ -32,23 +34,34 @@ describe("RealtimeListener", () => {
 
     source.onmessage?.({ data: JSON.stringify({ type: "note.created", noteId }) });
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: ["notes"] });
+    expect(source.url).toBe("/api/v1/events");
+    expect(invalidate).toHaveBeenCalledExactlyOnceWith({ queryKey: ["notes"] });
   });
 
-  it("ignores unknown events", () => {
+  it("ignores unknown events and malformed frames", () => {
     const { invalidate, source } = mount();
 
     source.onmessage?.({ data: JSON.stringify({ type: "internal.audit" }) });
+    source.onmessage?.({ data: "not json" });
 
     expect(invalidate).not.toHaveBeenCalled();
   });
 
-  it("resyncs everything after a reconnect", () => {
+  it("resyncs everything after a reconnect, not on the first connection", () => {
     const { invalidate, source } = mount();
 
     source.onopen?.();
+    expect(invalidate).not.toHaveBeenCalled();
     source.onopen?.();
 
-    expect(invalidate).toHaveBeenCalledWith();
+    expect(invalidate).toHaveBeenCalledExactlyOnceWith();
+  });
+
+  it("closes the connection on unmount", () => {
+    const { view, source } = mount();
+
+    view.unmount();
+
+    expect(source.close).toHaveBeenCalledOnce();
   });
 });

@@ -1,7 +1,7 @@
 import "server-only";
-import { formatSseMessage, formatSseRetry, SSE_HEARTBEAT } from "@/lib/sse";
 
-export type SseSend = (message: { id?: string; data: unknown }) => void;
+/** Writes one message; `data` is sent as JSON (never contains raw newlines, so one `data:` line). */
+export type SseSend = (data: unknown) => void;
 
 type EventStreamOptions = {
   /** Closes the stream when the client disconnects (`request.signal`). */
@@ -11,7 +11,10 @@ type EventStreamOptions = {
   readonly heartbeatMs?: number;
 };
 
-const RETRY_MS = 3000;
+// `retry:` sets the browser's reconnect delay; `:` lines are comments that keep idle connections
+// open through proxies and load balancers.
+const RETRY_FRAME = "retry: 3000\n\n";
+const HEARTBEAT_FRAME = ": ping\n\n";
 
 const SSE_HEADERS = {
   "content-type": "text/event-stream; charset=utf-8",
@@ -25,37 +28,35 @@ export function eventStreamResponse({
   signal,
   subscribe,
   heartbeatMs = 25_000,
-}: EventStreamOptions) {
+}: EventStreamOptions): Response {
   const encoder = new TextEncoder();
-  let stop: (() => void) | undefined;
+  let stop: () => void = () => undefined;
   const stream = new ReadableStream<Uint8Array>({
     start(controller) {
-      // The client may already be gone (e.g. it left while the route awaited setup): an aborted
-      // signal never fires `abort` again, so subscribing now would leak the listener and timer.
+      // The client may already be gone (it left while the route awaited setup): an aborted signal
+      // never fires `abort` again, so subscribing now would leak the listener and timer.
       if (signal.aborted) {
         controller.close();
         return;
       }
       const write = (text: string) => controller.enqueue(encoder.encode(text));
-      const unsubscribe = subscribe((message) => write(formatSseMessage(message)));
-      const heartbeat = setInterval(() => write(SSE_HEARTBEAT), heartbeatMs);
-      // Idempotent: runs once, whichever comes first (client abort or stream cancel).
+      const unsubscribe = subscribe((data) => write(`data: ${JSON.stringify(data)}\n\n`));
+      const heartbeat = setInterval(() => write(HEARTBEAT_FRAME), heartbeatMs);
+      const onAbort = () => {
+        stop();
+        controller.close();
+      };
+      // Runs once, whichever comes first: client abort or stream cancel.
       stop = () => {
-        stop = undefined;
+        stop = () => undefined;
         clearInterval(heartbeat);
         unsubscribe();
         signal.removeEventListener("abort", onAbort);
       };
-      const onAbort = () => {
-        stop?.();
-        controller.close();
-      };
       signal.addEventListener("abort", onAbort, { once: true });
-      write(formatSseRetry(RETRY_MS));
+      write(RETRY_FRAME);
     },
-    cancel() {
-      stop?.();
-    },
+    cancel: () => stop(),
   });
   return new Response(stream, { headers: SSE_HEADERS });
 }

@@ -30,9 +30,7 @@ describe("notes service", () => {
     const result = await service.create({ title: "Buy milk" });
 
     const noteId = result.ok ? result.data.id : "";
-    expect(published).toHaveBeenCalledWith(
-      expect.objectContaining({ event: { type: "note.created", noteId } }),
-    );
+    expect(published).toHaveBeenCalledWith({ type: "note.created", noteId });
   });
 
   it("returns a validation failure without writing or publishing", async () => {

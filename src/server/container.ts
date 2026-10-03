@@ -1,6 +1,6 @@
 import "server-only";
 import { getDb } from "./db/client";
-import { getProcessEventBroker } from "./events/event-broker";
+import { createInMemoryEventBroker } from "./events/event-broker";
 import { createDrizzleNotesRepository } from "./notes/drizzle-notes-repository";
 
 /**
@@ -12,7 +12,7 @@ async function createContainer() {
   return {
     notesRepo: createDrizzleNotesRepository(db),
     /** Live fan-out to SSE clients (single process); swap for Redis pub/sub when scaling out. */
-    eventBroker: getProcessEventBroker(),
+    eventBroker: createInMemoryEventBroker(),
   };
 }
 

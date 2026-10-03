@@ -25,8 +25,8 @@ describe("eventStreamResponse", () => {
     const reader = (response.body as ReadableStream<Uint8Array>).getReader();
     expect(await readChunk(reader)).toBe("retry: 3000\n\n");
 
-    send({ id: "1", data: { type: "a" } });
-    expect(await readChunk(reader)).toBe('id: 1\ndata: {"type":"a"}\n\n');
+    send({ type: "a", text: "x\ny" });
+    expect(await readChunk(reader)).toBe('data: {"type":"a","text":"x\\ny"}\n\n');
 
     controller.abort();
     expect(await reader.read()).toEqual({ done: true, value: undefined });

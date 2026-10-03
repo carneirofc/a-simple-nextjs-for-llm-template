@@ -14,11 +14,11 @@ Scope: this template stays focused on Next.js, SSR and the browser. It ships **l
 
 | Piece | File | Role |
 | --- | --- | --- |
-| `EventBroker` port + in-memory adapter | `src/server/events/event-broker.ts` | `publish(event)` / `subscribe(listener)`; one per process, chosen in `container.ts` |
-| SSE response | `src/server/http/event-stream.ts` | `text/event-stream`, heartbeat, `retry:`, cleans up on disconnect |
+| `EventBroker` port + in-memory adapter | `src/server/events/event-broker.ts` | `publish(event)` / `subscribe(listener)`; one per process (the container is a process singleton) |
+| SSE response | `src/server/http/event-stream.ts` | `text/event-stream`, JSON `data:` frames, heartbeat, `retry:`, cleans up on disconnect |
 | SSE route | `src/app/api/v1/events/route.ts` | forwards only events declared public (flag `FEATURE_REALTIME`) |
 | Public events registry | `src/app/_events/realtime-events.ts` | `combineRealtimeEvents([...feature matchers])` |
-| Browser | `src/lib/use-event-source.ts`, `src/app/_events/realtime-listener.tsx` | native `EventSource`; invalidates the query keys each event maps to; full resync after reconnect |
+| Browser | `src/app/_events/realtime-listener.tsx` | native `EventSource`; invalidates the query keys each event maps to; full resync after reconnect (no `Last-Event-ID` replay) |
 | Example | `src/features/notes/notes-events.ts`, `data.ts` `create` | `note.created` → every open tab refetches the notes list |
 
 ## Rules

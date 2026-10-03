@@ -1,11 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import { createInMemoryEventBroker } from "./event-broker";
 
-const NOW = new Date("2026-01-01T00:00:00.000Z");
-
 describe("createInMemoryEventBroker", () => {
-  it("wraps events with an id and timestamp and delivers them until unsubscribed", () => {
-    const broker = createInMemoryEventBroker(() => NOW);
+  it("delivers events until unsubscribed", () => {
+    const broker = createInMemoryEventBroker();
     const listener = vi.fn();
     const unsubscribe = broker.subscribe(listener);
 
@@ -13,12 +11,7 @@ describe("createInMemoryEventBroker", () => {
     unsubscribe();
     broker.publish({ type: "a.happened" });
 
-    expect(listener).toHaveBeenCalledOnce();
-    expect(listener).toHaveBeenCalledWith({
-      id: expect.any(String),
-      occurredAt: NOW,
-      event: { type: "a.happened" },
-    });
+    expect(listener).toHaveBeenCalledExactlyOnceWith({ type: "a.happened" });
   });
 
   it("keeps delivering when one listener throws", () => {

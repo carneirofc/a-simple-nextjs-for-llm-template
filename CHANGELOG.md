@@ -6,7 +6,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 ## [Unreleased]
 
 ### Added
-- Live UI updates: in-memory `EventBroker` port, Server-Sent Events at `/api/v1/events` (flag `FEATURE_REALTIME`), `useEventSource` hook and `RealtimeListener` that invalidate TanStack Query keys per event (`defineRealtimeEvents`); creating a note publishes `note.created` so other open tabs refetch. Durable background jobs are documented as an external-service integration, not built in.
+- Live UI updates: in-memory `EventBroker` port, Server-Sent Events at `/api/v1/events` (flag `FEATURE_REALTIME`) and a `RealtimeListener` (native `EventSource`, full resync on reconnect) that invalidates TanStack Query keys per event (`defineRealtimeEvents`); creating a note publishes `note.created` so other open tabs refetch. Durable background jobs are documented as an external-service integration, not built in.
 - Radix Primitives (`radix-ui`) as the base for shared UI components.
 - `Label` primitive (`src/components/ui/label.tsx`) built on Radix `Label`.
 - `Button` `asChild` prop (Radix `Slot`) to render links or other elements with button styles.

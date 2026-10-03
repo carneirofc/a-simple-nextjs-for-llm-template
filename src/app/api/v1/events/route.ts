@@ -16,9 +16,9 @@ export async function GET(request: Request): Promise<Response> {
   return eventStreamResponse({
     signal: request.signal,
     subscribe: (send) =>
-      eventBroker.subscribe(({ id, event }) => {
+      eventBroker.subscribe((event) => {
         if (matchRealtimeEvent(event) !== null) {
-          send({ id, data: event });
+          send(event);
         }
       }),
   });

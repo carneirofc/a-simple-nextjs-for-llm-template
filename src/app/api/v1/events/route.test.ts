@@ -27,9 +27,7 @@ describe("GET /api/v1/events", () => {
     broker.publish({ type: "note.created", noteId });
 
     expect(response.headers.get("content-type")).toBe("text/event-stream; charset=utf-8");
-    expect(await readChunk(reader)).toMatch(
-      new RegExp(`^id: [0-9a-f-]{36}\ndata: \\{"type":"note.created","noteId":"${noteId}"\\}\n\n$`),
-    );
+    expect(await readChunk(reader)).toBe(`data: {"type":"note.created","noteId":"${noteId}"}\n\n`);
     controller.abort();
   });
 });
