@@ -1,14 +1,12 @@
 "use server";
 
-import type { NewNote, Note } from "@/server/db/schema/notes";
-import { getNotes, insertNote } from "./data";
+import type { ActionResult } from "@/lib/action-result";
+import type { Note } from "@/server/db/schema/notes";
+import { getNotesService } from "./data";
 
-// Client-callable entry points. Never call these during render; Server Components use `data.ts`.
+// Client-callable mutations only (actions are queued one at a time; reads use `/api/v1/notes`).
+// Never call these during render; Server Components use `data.ts`.
 
-export async function listNotes(): Promise<Note[]> {
-  return await getNotes();
-}
-
-export async function createNote(input: NewNote): Promise<Note> {
-  return await insertNote(input);
+export async function createNote(input: unknown): Promise<ActionResult<Note>> {
+  return (await getNotesService()).create(input);
 }

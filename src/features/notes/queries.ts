@@ -1,9 +1,9 @@
 import { queryOptions } from "@tanstack/react-query";
-import { listNotes } from "./actions";
+import { fetchNotes } from "./notes-api-client";
+import { notesCache } from "./notes-cache";
 
-export const notesQueryKey = ["notes"] as const;
-
+/** Client reads via the API route; server prefetch overrides `queryFn` with `data.ts`. */
 export const notesQueryOptions = queryOptions({
-  queryKey: notesQueryKey,
-  queryFn: () => listNotes(),
+  queryKey: notesCache.key.list(),
+  queryFn: fetchNotes,
 });

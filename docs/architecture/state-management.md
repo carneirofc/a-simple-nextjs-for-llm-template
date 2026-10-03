@@ -21,8 +21,8 @@ Not allowed: Redux, Zustand, React Context as a store (Context is fine for injec
 
 - **Query-key factory** per feature in the cache contract (`<feature>-cache.ts`, see [caching.md](caching.md)), hierarchical so prefix invalidation works: `["notes"]` ⊃ `["notes", "list", filters]` ⊃ `["notes", "detail", id]`. Never inline key arrays in components.
 - **`queryOptions` objects** in `queries.ts` are the single definition used by `useQuery`/`useSuspenseQuery`, server prefetch, and invalidation.
-- **Reads from the client go through `GET` route handlers, not server actions.** Server actions are queued one at a time per client and are meant for mutations (`02-guides/server-actions.md`, `backend-for-frontend.md`). The `notes` example's `listNotes` action as `queryFn` is acceptable for a demo with one query; new features with client-side reads (polling, refetch on focus, several queries on a screen) expose `GET /api/v1/<feature>` and use `fetch` in the `queryFn`.
-- **Per-request `QueryClient` on the server**: wrap the server branch of `getQueryClient()` in React `cache()` so a layout and page in the same render share one client (TanStack and Next docs: one client per server render, a singleton in the browser).
+- **Reads from the client go through `GET` route handlers, not server actions.** Server actions are queued one at a time per client and are meant for mutations (`02-guides/server-actions.md`, `backend-for-frontend.md`). `notes` reads through `GET /api/v1/notes` (`fetchNotes` in `notes-api-client.ts` decodes the response with the wire schema); copy that.
+- **Per-request `QueryClient` on the server**: `getQueryClient()` wraps the server branch in React `cache()`, so a layout and page in the same render share one client and requests never share one (a singleton in the browser).
 - **Mutations**: `useMutation` → server action → on success, either `setQueryData` with the returned DTO (no extra round trip) or `invalidateQueries` by key prefix. For instant UI, optimistic update in `onMutate`, roll back in `onError`, invalidate in `onSettled`. React 19 `useOptimistic` is fine for form-local optimistic UI.
 - **Defaults**: global `staleTime` 60 s (set in `src/lib/query-client.ts`); override per query from the data's real volatility, not per component.
 - **Parallel reads**: independent `useSuspenseQuery` calls in one component run sequentially; put them in sibling components or use `useSuspenseQueries`.
@@ -39,11 +39,11 @@ export const actionErrorSchema = z.object({
 export type ActionResult<T> = { ok: true; data: T } | { ok: false; error: z.infer<typeof actionErrorSchema> };
 ```
 
-Put the generic helper in `src/lib/action-result.ts` (with tests) when the first action needs it. The client maps `error.code` and `fields` to dictionary keys; `mutationFn` throws on `ok: false` only if you want TanStack's `onError` path.
+Implemented in `src/lib/action-result.ts` (`ok`, `fail`, `validationFailure(zodError)`, `toFieldErrors`). `notes-form.tsx` shows server field errors with `formApi.setErrorMap({ onSubmit: { fields: toFieldErrors(result.error) } })`; the panel invalidates queries only when `result.ok`.
 
 ## Shared data between server and client
 
-- **Schemas are the contract.** A Zod schema used by both a client form and the server must be importable without pulling Drizzle or `server-only` code into the client bundle. Today `notes-form.tsx` imports `noteInsertSchema` from `src/server/db/schema/notes.ts`; that works because table files have no `server-only` imports, but it ships `drizzle-orm` table code to the browser. For new features with client forms, put the input schema in `<feature>/<feature>-schema.ts` (plain Zod) and refine the `drizzle-zod` insert schema from it on the server.
+- **Schemas are the contract.** A Zod schema used by both a client form and the server must be importable without pulling Drizzle or `server-only` code into the client bundle. Input rules live in `<feature>/<feature>-schema.ts` (plain Zod, e.g. `noteInputSchema`), used by the form and by the use case. Table files only hold DB shapes derived with `drizzle-zod`; `tsc` checks that the parsed input fits the insert type.
 - **Pass DTOs, not rows**, across the RSC → client boundary. Everything passed as a prop is serialized into the HTML; never pass objects that contain fields the user must not see.
 - **Hydration, not double-fetch**: Server Components prefetch with the `data.ts` function under the same query key, then `HydrationBoundary` hands the cache to the client (see `src/app/AGENTS.md`).
 - **Dates** cross the boundary as `Date` via RSC serialization; in JSON route handlers they are ISO strings — parse them back with `z.coerce.date()` in the client schema.

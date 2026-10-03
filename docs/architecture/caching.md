@@ -44,10 +44,12 @@ Layers 2–4 are **shared**: anything stored there is visible to every user. Lay
 One file, `<feature>/<feature>-cache.ts`, with no server-only or client-only imports, owns every identity for that data so the layers stay coordinated:
 
 ```ts
-export const notesCache = {
-  key: { all: ["notes"] as const, detail: (id: string) => ["notes", id] as const },
-  tag: { all: "notes", detail: (id: string) => `notes:${id}` },
-};
+// src/features/notes/notes-cache.ts today (keys only):
+const all = ["notes"] as const;
+export const notesCache = { key: { all, list: () => [...all, "list"] as const } };
+
+// with server caching on, the same object gains tags:
+//   tag: { all: "notes", detail: (id: string) => `notes:${id}` }
 ```
 
 `queries.ts` builds `queryOptions` from `notesCache.key.*`; cached server reads call `cacheTag(notesCache.tag.*)`; mutations invalidate both.
@@ -66,6 +68,7 @@ export const notesCache = {
 
 ## HTTP caching for route handlers (other clients)
 
+- Helper: `jsonWithEtag(request, body, { cacheControl })` in `src/server/http/json-response.ts` sets `ETag` and answers `If-None-Match` with `304` (default `private, no-cache`: always revalidate, cheap thanks to 304). `GET /api/v1/notes` uses it.
 - Public, non-personalized `GET`: `Cache-Control: public, max-age=0, s-maxage=<n>, stale-while-revalidate=<m>` plus a strong `ETag` (hash of the DTO or `updatedAt`); answer `If-None-Match` with `304`.
 - Authenticated `GET`: `Cache-Control: private, no-store` (or `private, max-age=<n>` + `ETag` for revalidation). Never `public` on a response that depends on the caller.
 - Mutations are never cached; they invalidate (table above) and, behind a CDN, call its purge API.
@@ -83,4 +86,4 @@ Defaults are per process, so without this list instances serve different data:
 
 ## Migration to `cacheComponents` (proposed)
 
-Follow `02-guides/migrating-to-cache-components.md`. For this repo specifically: set `cacheComponents: true`; move DB reads below `<Suspense>`; replace page-level `await connection()` with `io()` / Suspense where it only guards current time; build the TanStack hydration state with the guide's prerenderable `dehydrate` helper (plain `dehydrate()` reads the clock during prerender); add the cache contract and `updateTag` to `notes`. Do it as its own change with tests.
+Follow `02-guides/migrating-to-cache-components.md`. For this repo specifically: set `cacheComponents: true`; move DB reads below `<Suspense>`; replace page-level `await connection()` with `io()` / Suspense where it only guards current time; build the TanStack hydration state with the guide's prerenderable `dehydrate` helper (plain `dehydrate()` reads the clock during prerender); add tags to `notesCache` and `updateTag` to the `notes` actions. Do it as its own change with tests.

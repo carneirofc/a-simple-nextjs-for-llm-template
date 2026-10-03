@@ -7,7 +7,7 @@ import { NotesForm } from "./notes-form";
 
 describe("NotesForm", () => {
   it("submits the trimmed title and resets", async () => {
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const onSubmit = vi.fn().mockResolvedValue({ ok: true, data: null });
     render(<NotesForm labels={en.notes.form} onSubmit={onSubmit} validation={en.validation} />);
 
     const input = screen.getByLabelText("Title");
@@ -27,6 +27,22 @@ describe("NotesForm", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("This field is required");
     expect(screen.getByLabelText("Title")).toHaveAttribute("aria-invalid", "true");
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows field errors returned by the server and keeps the input", async () => {
+    const onSubmit = vi.fn().mockResolvedValue({
+      ok: false,
+      error: { code: "validation", fields: { title: ["tooLong"] } },
+    });
+    render(<NotesForm labels={en.notes.form} onSubmit={onSubmit} validation={en.validation} />);
+
+    const input = screen.getByLabelText("Title");
+    await userEvent.type(input, "Buy milk");
+    await userEvent.click(screen.getByRole("button", { name: "Add" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("This is too long");
+    expect(input).toHaveValue("Buy milk");
+    expect(input).toHaveAttribute("aria-invalid", "true");
   });
 
   it("renders labels and validation errors in the given language", async () => {

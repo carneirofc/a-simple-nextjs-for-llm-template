@@ -1,10 +1,14 @@
 import "server-only";
-import { desc } from "drizzle-orm";
+import { type ActionResult, ok, validationFailure } from "@/lib/action-result";
 import { isEnabled } from "@/lib/flags";
-import { getDb } from "@/server/db/client";
-import { type NewNote, type Note, noteInsertSchema, notes } from "@/server/db/schema/notes";
+import { type Container, getContainer } from "@/server/container";
+import type { Note } from "@/server/db/schema/notes";
+import { noteInputSchema } from "./notes-schema";
 
-// Server-only data access. Call directly from Server Components; expose to the client via `actions.ts`.
+// Use cases. Every transport (Server Components, actions, `/api/v1` route handlers) calls these, so
+// feature-flag checks, validation and (when needed) authorization live here once.
+
+export type NotesDeps = Pick<Container, "notesRepo">;
 
 function assertEnabled(): void {
   if (!isEnabled("notesExample")) {
@@ -12,19 +16,29 @@ function assertEnabled(): void {
   }
 }
 
-export async function getNotes(): Promise<Note[]> {
-  assertEnabled();
-  const db = await getDb();
-  return db.select().from(notes).orderBy(desc(notes.createdAt));
+export function createNotesService({ notesRepo }: NotesDeps) {
+  return {
+    list: (): Promise<Note[]> => {
+      assertEnabled();
+      return notesRepo.list();
+    },
+    /** `input` is untrusted (actions are public endpoints); invalid input is an expected failure. */
+    create: async (input: unknown): Promise<ActionResult<Note>> => {
+      assertEnabled();
+      const parsed = noteInputSchema.safeParse(input);
+      if (!parsed.success) {
+        return validationFailure(parsed.error);
+      }
+      return ok(await notesRepo.insert(parsed.data));
+    },
+  };
 }
 
-export async function insertNote(input: NewNote): Promise<Note> {
-  assertEnabled();
-  const values = noteInsertSchema.parse(input);
-  const db = await getDb();
-  const [created] = await db.insert(notes).values(values).returning();
-  if (!created) {
-    throw new Error("Insert returned no row");
-  }
-  return created;
+export async function getNotesService() {
+  return createNotesService(await getContainer());
+}
+
+/** Server Component entry point (SSR prefetch). */
+export async function getNotes(): Promise<Note[]> {
+  return (await getNotesService()).list();
 }

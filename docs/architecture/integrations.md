@@ -52,10 +52,13 @@ All three call the same `data.ts` use cases, so validation and authorization exi
 
 ### Public API rules (`/api/v1`)
 
+Reference: `src/app/api/v1/notes/route.ts` (thin GET over `getNotesService().list()`), `src/features/notes/notes-api-schemas.ts` (explicit wire schema; `z.codec` turns ISO strings ↔ `Date`, `z.encode` strips non-contract fields), `src/server/http/json-response.ts` (`jsonWithEtag`, `problem`).
+
+
 - **Explicit contracts.** Request and response bodies are hand-written Zod schemas in `<feature>/<feature>-api-schemas.ts`, not `drizzle-zod` row schemas, so a column change cannot silently break clients. A typed row → DTO mapper (unit-tested) makes `tsc` flag schema drift. Generate OpenAPI from the schemas (`z.toJSONSchema`) when the first external consumer arrives.
 - **Versioning.** Breaking changes ⇒ new `/api/v2/...` handlers reusing the same core; keep v1 until consumers migrate. Additive changes (new optional fields) are not breaking.
 - **Auth.** Every handler resolves the caller itself (session cookie for the browser; bearer tokens via Better Auth's `bearer`/`jwt` plugins for other clients) and authorizes in `data.ts`. `src/proxy.ts` is not an auth layer. With `getAuth()` returning `null`, protected endpoints answer `404`/`401`, never act unauthenticated.
-- **Errors** use RFC 9457 `application/problem+json` (`type`, `title`, `status`, `code`, field errors), mapped from the same `Result` codes the UI uses. No stack traces or backend messages.
+- **Errors** use RFC 9457 `application/problem+json` via `problem(actionError)` (`type`, `status`, `code`, `fields`), mapped from the same `Result` codes the UI uses (`validation` 422, `notFound` 404, `conflict` 409, `forbidden` 403). No stack traces or backend messages.
 - **Input hardening**: check `Content-Type` and body size, parse params/query/body with Zod, cap page sizes, use cursor pagination, return `Location` on `201`.
 - **Idempotency**: `POST` accepts an `Idempotency-Key` header; store key → response for a window and replay it on retry.
 - **Rate limiting** per client/token at the edge (proxy/CDN/gateway) and, for expensive endpoints, in the handler with a shared store when there are several instances.

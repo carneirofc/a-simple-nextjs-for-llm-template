@@ -28,6 +28,20 @@ Design patterns and coding principles for code built on this template. `AGENTS.m
 - **Dependencies point inward.** Transports import the core; the core imports ports (types) and receives adapters through its dependencies; adapters never import transports or UI. Biome's `noRestrictedImports` overrides enforce the folder-level part of this (see below).
 - **Edges validate, the core trusts its types.** Every value that crosses a boundary (env, request, action argument, DB JSON column, backend response, webhook, event payload) is parsed with Zod exactly once, at that boundary.
 
+## Reference implementation
+
+`src/features/notes/` is the minimal working example of every pattern marked **In use**; copy its shape:
+
+| Concern | Files |
+| --- | --- |
+| Use cases (validation, flag, `Result`) | `src/features/notes/data.ts` (+ `data.test.ts` with a fake repository) |
+| Port, adapters, contract test | `src/server/notes/notes-ports.ts`, `drizzle-notes-repository.ts`, `fake-notes-repository.ts`, `notes-repository.test.ts` |
+| Composition root | `src/server/container.ts` |
+| Mutation transport | `src/features/notes/actions.ts` → `Result` → `notes-form.tsx` shows server field errors |
+| Read transport for any client | `src/app/api/v1/notes/route.ts` + `notes-api-schemas.ts` (wire contract, Zod codec for dates) + `src/server/http/json-response.ts` (ETag/304, problem+json) |
+| Browser cache | `notes-cache.ts` (keys) → `queries.ts` (`fetchNotes` from `notes-api-client.ts`) → `notes-panel.tsx` (invalidate on success) |
+| Shared input rules | `notes-schema.ts` (plain Zod; used by the form and the use case) |
+
 ## Enforced boundaries (`biome.json`)
 
 | Folder | May not import |
@@ -47,14 +61,15 @@ Patterns are added when the first real need appears, not up front (YAGNI). The t
 | Data access layer (`data.ts`), Zod at boundaries, derived types | **In use** | — |
 | Server state in TanStack Query, forms in TanStack Form | **In use** | — |
 | Folder dependency rule (Biome) | **In use** | — |
-| Query-key factory + per-request `QueryClient` | Rule | next feature with more than one query |
-| Expected errors as values (`Result`) | Rule | first action whose failure the user can fix |
-| Function DI + composition root (`src/server/container.ts`) | Rule | first port with two implementations, or first external backend |
+| Cache contract (`<feature>-cache.ts`) + per-request `QueryClient` | **In use** | — |
+| Expected errors as values (`Result`, `src/lib/action-result.ts`) | **In use** | — |
+| Function DI: repository port + adapters + composition root (`src/server/container.ts`) | **In use** | — |
+| Client reads via `GET /api/v1/<feature>` with ETag + problem+json | **In use** | — |
 | URL search params as state | Rule | first filter, sort, page or tab |
 | Jotai | Rule | first client state shared by components that are not parent/child |
 | Next `"use cache"` + `cacheTag` (`cacheComponents`) | Proposed | first data shared across users that is expensive to read |
 | Shared cache handler (Redis) | Proposed | running more than one server instance |
-| Versioned public API (`/api/v1`) + OpenAPI | Rule | first non-browser client |
+| OpenAPI generated from the API schemas | Rule | first non-browser client |
 | In-process domain events + `after()` | Rule | first side effect that is not the use case itself |
 | Transactional outbox + worker | Proposed | first side effect that must survive a crash, or cross-service event |
 | SSE invalidation channel | Proposed | first screen that must update when another user writes |

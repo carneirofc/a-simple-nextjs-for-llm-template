@@ -1,4 +1,5 @@
 import { defaultShouldDehydrateQuery, isServer, QueryClient } from "@tanstack/react-query";
+import { cache } from "react";
 
 const STALE_TIME_MS = 60_000;
 
@@ -17,12 +18,16 @@ function makeQueryClient(): QueryClient {
   });
 }
 
+// One client per server request: React `cache()` memoizes for the duration of a Server Component
+// render (layout and page share it) and never across requests.
+const getRequestQueryClient = cache(makeQueryClient);
+
 let browserQueryClient: QueryClient | undefined;
 
-/** Server: fresh client per request. Browser: one shared client. */
+/** Server: one client per request. Browser: one shared client. */
 export function getQueryClient(): QueryClient {
   if (isServer) {
-    return makeQueryClient();
+    return getRequestQueryClient();
   }
   browserQueryClient ??= makeQueryClient();
   return browserQueryClient;

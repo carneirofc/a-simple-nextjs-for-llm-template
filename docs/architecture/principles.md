@@ -31,7 +31,7 @@ Short rules with the reason behind each. They complement the size limits in `AGE
 ## Server/client boundary
 
 - Server Components by default; `"use client"` only on interactive leaves.
-- Client components import `@/server/**` only as `import type`, with one tolerated exception: Zod schemas from `src/server/db/schema/*` (no `server-only` there, but they pull Drizzle into the bundle). New client forms take their schema from plain-Zod `<feature>/<feature>-schema.ts`; the server refines the DB schema from it.
+- Client components import `@/server/**` only as `import type`. Runtime code they share with the server (input schemas) lives in plain-Zod `<feature>/<feature>-schema.ts`, so Drizzle never reaches the browser bundle.
 - `"server-only"` on every module that touches secrets, the DB or backends.
 
 ## Testing

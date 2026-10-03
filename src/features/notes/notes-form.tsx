@@ -5,23 +5,29 @@ import { Button } from "@/components/ui/button";
 import { FieldErrors } from "@/components/ui/field-errors";
 import { TextInput } from "@/components/ui/text-input";
 import type { Dictionary } from "@/i18n/dictionaries/en";
-import { type NewNote, noteInsertSchema } from "@/server/db/schema/notes";
+import { type ActionResult, toFieldErrors } from "@/lib/action-result";
+import { type NoteInput, noteInputSchema } from "./notes-schema";
 
 type NotesFormProps = {
-  onSubmit: (value: NewNote) => Promise<unknown>;
+  /** Resolves to the action result; server-side field errors are shown on the matching fields. */
+  onSubmit: (value: NoteInput) => Promise<ActionResult<unknown>>;
   labels: Dictionary["notes"]["form"];
   validation: Dictionary["validation"];
 };
 
-const DEFAULT_VALUES: NewNote = { title: "" };
+const DEFAULT_VALUES: NoteInput = { title: "" };
 
 export function NotesForm({ onSubmit, labels, validation }: NotesFormProps) {
   const form = useForm({
     defaultValues: DEFAULT_VALUES,
-    validators: { onSubmit: noteInsertSchema },
+    validators: { onSubmit: noteInputSchema },
     onSubmit: async ({ value, formApi }) => {
-      await onSubmit(noteInsertSchema.parse(value));
-      formApi.reset();
+      const result = await onSubmit(noteInputSchema.parse(value));
+      if (result.ok) {
+        formApi.reset();
+        return;
+      }
+      formApi.setErrorMap({ onSubmit: { fields: toFieldErrors(result.error) } });
     },
   });
 

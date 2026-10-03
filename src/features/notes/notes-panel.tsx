@@ -4,9 +4,10 @@ import { useMutation, useQueryClient, useSuspenseQuery } from "@tanstack/react-q
 import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries/en";
 import { createNote } from "./actions";
+import { notesCache } from "./notes-cache";
 import { NotesForm } from "./notes-form";
 import { NotesTable } from "./notes-table";
-import { notesQueryKey, notesQueryOptions } from "./queries";
+import { notesQueryOptions } from "./queries";
 
 type NotesPanelProps = {
   labels: Dictionary["notes"];
@@ -19,7 +20,11 @@ export function NotesPanel({ labels, validation, locale }: NotesPanelProps) {
   const { data: notes } = useSuspenseQuery(notesQueryOptions);
   const { mutateAsync } = useMutation({
     mutationFn: createNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: notesQueryKey }),
+    onSuccess: async (result) => {
+      if (result.ok) {
+        await queryClient.invalidateQueries({ queryKey: notesCache.key.all });
+      }
+    },
   });
 
   return (
