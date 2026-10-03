@@ -23,6 +23,15 @@ description: Review the current diff (or a named branch/PR) against this repo's 
 - New user-facing behaviour is behind a `FEATURE_*` flag resolved on the server.
 - `"use client"` only on interactive leaves; Server Components by default.
 
+**Architecture** (`docs/architecture/`)
+- Transports (pages, actions, route handlers, webhooks) are thin and call `data.ts`; no feature imports another feature.
+- Server actions only for mutations; client-side reads use `GET` route handlers or RSC prefetch.
+- Expected failures return a `Result`; unexpected ones throw with a message.
+- New dependency on an external system goes through a port + gateway with timeouts, Zod-validated responses and a fake for tests; implementation chosen only in `src/server/container.ts`.
+- Caching: keys/tags come from `<feature>-cache.ts`; no per-user data in shared caches; no cookies/headers/clock inside `"use cache"`; every mutation invalidates the server tag and the TanStack key; no `dynamic`/`revalidate` segment exports.
+- Side effects: `after()` for best-effort, outbox for must-not-lose; events are Zod unions with an `id`; consumers and webhooks are idempotent.
+- Pattern introduced without its trigger from `docs/architecture/README.md` (adoption status) ⇒ over-engineering finding.
+
 **UI**
 - Built from `src/components/ui`; interactive primitives wrap Radix.
 - No hard-coded user-visible strings; every new key exists in all `src/i18n/dictionaries/*`; dates/numbers formatted with an explicit locale.

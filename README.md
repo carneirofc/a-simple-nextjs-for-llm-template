@@ -25,6 +25,7 @@ pnpm dev               # http://localhost:3000 — embedded PGlite DB, no setup
 ## Working with AI agents
 
 - [AGENTS.md](AGENTS.md) (plus one per `src/` subtree) holds the rules; `CLAUDE.md` imports it.
+- [docs/architecture/](docs/architecture/README.md) explains the design patterns behind them — layering, DI, state, caching, events, multi-backend integration — and when to introduce each.
 - `.claude/skills/` — reusable prompts: `/new-feature`, `/new-ui-primitive`, `/review-change`.
 - `.claude/settings.json` — pre-approved `pnpm` checks, a Biome hook that lints every edited file, and `pnpm install` on cloud session start.
 - CI runs `pnpm check`, commitlint and a migration-drift check on every PR.

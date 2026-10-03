@@ -17,8 +17,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · Versioning: 
 - `AGENTS.md`: UI & styling, security and agent-loop guidance plus a definition of done.
 - Cross-platform Git hooks via Lefthook (installed by `pnpm install`): pre-commit Biome autofix + related Vitest tests on staged files, commit-msg commitlint (Conventional Commits, no `Co-Authored-By`), pre-push typecheck + tests. CI also lints commit messages.
 - Internationalisation (English + Brazilian Portuguese (`pt-BR`)) on Next 16 primitives, no new dependencies: locale-prefixed routes under `src/app/[lang]/`, `src/proxy.ts` redirects via `NEXT_LOCALE` cookie → `Accept-Language`, type-checked dictionaries, `next/root-params` `getDictionary()`, `LocaleSwitcher`, `interpolate()` and `formatDateTime()` helpers, localized 404/error pages and metadata. Rules in `src/i18n/AGENTS.md`.
+- `docs/architecture/`: design patterns and coding principles with adoption triggers — layering and principles, function-based IoC/DI with a composition root, state placement (server/URL/form/Jotai), Next 16 caching for multiple clients and instances (`use cache`, tags, cache handlers, HTTP caching), event-driven patterns (`after()`, domain events, outbox, SSE, webhooks), and gateway/anti-corruption-layer integration of multiple backends plus a versioned public API.
+- Biome `noRestrictedImports` folder boundaries: `src/components` cannot import app/features/server/env; `src/lib` and `src/i18n` cannot import app/features/server; `src/server` cannot import app/features/components.
 
 ### Changed
+- `AGENTS.md` (root, `src/app`, `src/features`, `src/server`, `src/components`) and the `/new-feature` and `/review-change` skills reference the architecture rules: thin transports over `data.ts`, actions for mutations only, `Result` for expected errors, `<feature>-cache.ts` contracts, no route segment cache config.
 - `TextInput` renders its label via the shared `Label` primitive.
 - `src/components/AGENTS.md` / `AGENTS.md`: "Radix first" contract for interactive UI primitives.
 - UI primitives merge `className` via `cn()` (callers can override base classes), use design tokens, and show `focus-visible` rings.

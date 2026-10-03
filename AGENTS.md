@@ -26,7 +26,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ### Hard rules
 - **Types derive from Zod.** Data shapes are Zod schemas; types are `z.infer<typeof schema>`. DB shapes come from Drizzle tables via `drizzle-zod` (`createSelectSchema` / `createInsertSchema`). No hand-written `type`/`interface` that duplicates a data shape. Component prop types are fine.
 - **ORM only.** All DB access goes through Drizzle via `getDb()` in `src/server/**` or server actions. No raw SQL strings, no other DB clients. Schema changes = edit `src/server/db/schema/*` → `pnpm db:generate` → commit `drizzle/`.
-- **State:** server state ⇒ TanStack Query. If a client state library is needed ⇒ **Jotai only** (not installed yet; add `jotai` when first needed). No Redux/Zustand/Context-as-store.
+- **State:** server state ⇒ TanStack Query; shareable view state (filters, sort, page, tab) ⇒ URL search params; form input ⇒ TanStack Form. If a client state library is needed ⇒ **Jotai only** (not installed yet; add `jotai` when first needed). No Redux/Zustand/Context-as-store. See `docs/architecture/state-management.md`.
 - **Forms ⇒ TanStack Form** (validators = Zod schemas). **Tables ⇒ TanStack Table v9** (`useTable` + `tableFeatures`, not v8 `useReactTable`). **Styles ⇒ Tailwind only.** **Base UI primitives ⇒ Radix (`radix-ui`)**, wrapped in `src/components/ui` (see `src/components/AGENTS.md`).
 - **Env** only via `src/env.ts` (`noProcessEnv` enforced). Add every new variable there and to `.env.example`.
 - **Feature toggles:** new user-facing features ship behind a flag in `src/lib/flags.ts` (+ `FEATURE_*` in `src/env.ts`). Resolve flags on the server, pass values to client components as props. Remove flag + dead branch once stable.
@@ -48,13 +48,25 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - Server Components by default; `"use client"` only on interactive leaves.
 - Build UI from `src/components/ui` primitives before writing raw styled elements.
 
+### Architecture & patterns
+Full rationale and "when to apply" triggers: `docs/architecture/` (read the page for the topic before writing code).
+- **Layers point inward (Biome-enforced folder rules):** `src/components` ✗ `@/app`/`@/features`/`@/server`/`@/env`; `src/lib` + `src/i18n` ✗ `@/app`/`@/features`/`@/server`; `src/server` ✗ `@/app`/`@/features`/`@/components`. Features never import other features.
+- **One core, many transports:** pages, server actions, `/api/v1` route handlers and webhooks all call the same `data.ts` use cases; authorization + Zod validation happen there once. Transports stay thin.
+- **IoC/DI without a container:** ports are behaviour types; adapters are `create<Name>(deps)` factories; `src/server/container.ts` (create when the first port lands) is the only place that picks implementations. Use cases take one `deps` object; tests pass fakes, not `vi.mock`. Importing a module never connects or starts anything.
+- **Errors:** expected failures return a `Result` (`{ ok, data } | { ok: false, error: { code } }`, `code` = dictionary key); unexpected ones throw `Error` with a message and `cause`.
+- **Reads vs writes:** client-side reads use `GET` route handlers or RSC prefetch, not server actions (actions are queued one at a time); server actions are for mutations.
+- **Caching:** one `<feature>-cache.ts` contract owns query keys and cache tags. Never put per-user data in a shared cache; nothing request-scoped (cookies, headers, clock) inside `"use cache"`. Mutations invalidate both layers (`updateTag`/`revalidateTag(tag, profile)` + `invalidateQueries`). No `dynamic`/`revalidate` segment exports or `unstable_cache` (incompatible with `cacheComponents`). See `docs/architecture/caching.md`.
+- **Side effects & events:** non-critical work in `after()`; events are Zod discriminated unions (`<entity>.<verb-ed>`, thin, with `id`); anything that must not be lost uses a transactional outbox, not an in-memory bus. See `docs/architecture/events.md`.
+- **External backends:** one gateway per backend in `src/server/integrations/<backend>/` (client + Zod schemas of their payloads + mapper + gateway implementing a port); every call has a timeout; retries only for idempotent requests. See `docs/architecture/integrations.md`.
+
 ### UI & styling
 - Colors come from semantic tokens in `src/app/globals.css` (`bg-primary`, `text-muted-foreground`, `border-border`, `ring-ring`, `text-destructive`, …). No raw palette classes (`zinc-300`, `red-600`); add a token (light + dark) instead.
 - Merge classes with `cn()` from `src/lib/cn.ts` (clsx + tailwind-merge), never string templates, so a caller's `className` overrides defaults.
 - Every focusable element has a visible `focus-visible:` style; every input has a label; invalid fields set `aria-invalid`.
 
 ### Security
-- Server actions (`"use server"`) are public HTTP endpoints. Validate every argument with Zod and authorize the caller inside `data.ts`; never trust ids, roles or flags sent by the client.
+- Server actions (`"use server"`) and route handlers are public HTTP endpoints. Validate every argument with Zod and authorize the caller inside `data.ts`; never trust ids, roles or flags sent by the client. `src/proxy.ts` is not an auth layer.
+- Validate every response from another backend and every webhook (signature first) with Zod; backend credentials stay server-side.
 - Never log or return secrets; error UI shows `error.digest`, not server messages.
 
 ### Git workflow (git-flow)
@@ -70,7 +82,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 ## Work Guidance
 
 - Agent loop for any change:
-  1. Read this file and the child `AGENTS.md` of every directory you will touch; read `node_modules/next/dist/docs/` for any Next API you are not certain of.
+  1. Read this file, the child `AGENTS.md` of every directory you will touch, and the `docs/architecture/` page for the pattern involved; read `node_modules/next/dist/docs/` for any Next API you are not certain of.
   2. Find the closest existing example (`src/features/notes/`, `src/components/ui/button.tsx`) and copy its shape.
   3. Make the smallest change that satisfies the request; write or update its test alongside it.
   4. Run `pnpm check`; fix root causes, don't suppress rules.
@@ -106,3 +118,4 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - `src/components/AGENTS.md` — shared UI primitives contract.
 - `src/features/AGENTS.md` — feature module shape (actions, query options, components, tests).
 - `src/i18n/AGENTS.md` — locales, dictionaries, translation and formatting rules.
+- `docs/architecture/` — design patterns and principles (layering, DI, state, caching, events, integrations) with adoption triggers.

@@ -15,6 +15,10 @@ Next.js App Router routes, root layout, global providers and CSS. All pages live
 - SSR data pattern: in the page, `await connection()` if it reads the DB, then `getQueryClient()` → `await fetchQuery(<feature>QueryOptions)` (not `prefetchQuery`, which swallows errors) → wrap client tree in `<HydrationBoundary state={dehydrate(queryClient)}>`. Client components read with `useSuspenseQuery` / `useQuery` using the same query options.
 - Check feature flags (`isEnabled`) on the server before rendering gated features.
 - `api/auth/[...all]/route.ts` returns 404 when auth is disabled; keep it that way.
+- Route handlers for other clients live in `api/v1/<resource>/route.ts`; webhooks in `api/webhooks/<provider>/route.ts`. Both are thin: parse with Zod, resolve the caller, call the feature's `data.ts`, map `Result` codes to `application/problem+json`. Set `Cache-Control` deliberately (`private, no-store` for anything per-user). See `docs/architecture/integrations.md`.
+- Don't fetch your own route handlers from Server Components; call `data.ts` directly.
+- Don't export `dynamic`, `revalidate` or `fetchCache` segment config (incompatible with `cacheComponents`); see `docs/architecture/caching.md`.
+- Each independently slow section (e.g. a different backend) gets its own async Server Component inside `<Suspense>` so the page streams.
 - Default exports only for Next special files (`page`, `layout`, `loading`, `error`, `not-found`, `template`, `default`).
 - New pages go in `[lang]/<route>/page.tsx`; read strings with `await getDictionary()` and pass slices to client components. Links: `` `/${locale}/route` ``.
 - Use `LayoutProps<"/route">` / `PageProps<"/route">` globals for typing.

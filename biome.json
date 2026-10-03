@@ -236,6 +236,94 @@
           }
         }
       }
+    },
+    {
+      "includes": ["src/components/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app/**"],
+                    "message": "Layering: only src/app composes routes; move shared code to src/lib or src/components (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/features/**"],
+                    "message": "Layering: this folder must not depend on features; pass data in as props/arguments (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Layering: this folder must stay client-safe; server code lives behind src/features data.ts (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/env"],
+                    "message": "Layering: UI primitives receive configuration as props, never read env (docs/architecture/README.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/lib/**", "src/i18n/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app/**"],
+                    "message": "Layering: only src/app composes routes; move shared code to src/lib or src/components (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/features/**"],
+                    "message": "Layering: this folder must not depend on features; pass data in as props/arguments (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/server/**"],
+                    "message": "Layering: this folder must stay client-safe; server code lives behind src/features data.ts (docs/architecture/README.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/server/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["@/app/**"],
+                    "message": "Layering: only src/app composes routes; move shared code to src/lib or src/components (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/features/**"],
+                    "message": "Layering: this folder must not depend on features; pass data in as props/arguments (docs/architecture/README.md)."
+                  },
+                  {
+                    "group": ["@/components/**"],
+                    "message": "Layering: server code must not import UI (docs/architecture/README.md)."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
     }
   ]
 }

@@ -10,6 +10,7 @@ Server-only code: database access and authentication. Every module imports `"ser
 - `db/schema/*.ts` — Drizzle `pgTable` definitions + derived Zod schemas + `z.infer` types. One file per domain.
 - `auth.ts` — Better Auth instance via `getAuth()`.
 - `../../drizzle/` — generated SQL migrations (commit them, never edit by hand).
+- When needed (see `docs/architecture/`): `container.ts` (composition root: lazy singleton wiring adapters), `<domain>/<domain>-ports.ts` (behaviour types) + adapters, `integrations/<backend>/` (gateway per external backend), `events/` (Zod event schemas, bus).
 
 ## Local Contracts
 
@@ -21,6 +22,12 @@ Server-only code: database access and authentication. Every module imports `"ser
 - New schema file ⇒ add it to the `schema` object in `db/client.ts`.
 - Migrations: `pnpm db:generate` after schema edits; prod applies with `pnpm db:migrate` (with `DATABASE_URL`).
 - **Auth:** `getAuth()` returns `null` unless `FEATURE_AUTH=true`; env validation requires `BETTER_AUTH_SECRET`, `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` in that case. Auth tables in `db/schema/auth.ts` must match Better Auth's model names (`user`, `session`, `account`, `verification`); update them when adding Better Auth plugins that extend the schema.
+
+- **Layering:** never import `@/app`, `@/features` or `@/components` (Biome-enforced). The container wires adapters; features build their services from it.
+- **No import-time side effects:** connect/start only inside lazy getters (`getDb()`, `getAuth()`, `getContainer()`), cached on `globalThis` when HMR would duplicate them.
+- **Ports & adapters:** add a port only for an external system, a second implementation, or something tests must fake (clock, ids, mailer). Adapters are `create<Name>(deps)` factories returning plain objects; each has a `fake-<name>.ts` sibling for tests. Only `container.ts` reads env to choose an adapter.
+- **Integrations:** `integrations/<backend>/` = `<backend>-client.ts` (timeout on every call, retries only when idempotent, typed errors) + `<backend>-schemas.ts` (Zod of their payloads) + `<backend>-mapper.ts` (pure, fixture-tested) + `<backend>-gateway.ts`. Env vars `<BACKEND>_URL` / `<BACKEND>_API_KEY` in `src/env.ts`. See `docs/architecture/integrations.md`.
+- **Events:** publish after the transaction commits; durable events go to an `outbox` table in the same transaction. See `docs/architecture/events.md`.
 
 ## Work Guidance
 
